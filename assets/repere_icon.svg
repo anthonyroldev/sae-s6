@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Background -->
+  <rect x="0" y="0" width="512" height="512" rx="108" ry="108" fill="#0F172A"/>
+
+  <!-- R lettermark: stem + bowl (evenodd counter) + leg -->
+
+  <!-- Stem -->
+  <rect x="120" y="80" width="74" height="352" fill="#FFFFFF"/>
+
+  <!-- Bowl with counter punched out via evenodd -->
+  <path
+    fill-rule="evenodd"
+    fill="#FFFFFF"
+    d="
+      M 194 80 A 92 92 0 0 1 194 264 Z
+      M 194 128 A 44 44 0 0 1 194 216 Z
+    "
+  />
+
+  <!-- Leg: thick diagonal kick, Rockstar-style -->
+  <polygon points="194,264 288,264 406,432 316,432" fill="#FFFFFF"/>
+</svg>

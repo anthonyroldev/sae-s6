@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 200" width="820" height="200">
+  <!-- Background (transparent — wordmark adapts to any bg) -->
+
+  <!-- Icon badge -->
+  <rect x="0" y="0" width="200" height="200" rx="42" ry="42" fill="#0F172A"/>
+
+  <!-- R lettermark scaled to 200x200 (original 512→200, factor 0.390625) -->
+  <g transform="scale(0.390625) translate(0 0)">
+    <!-- Stem -->
+    <rect x="120" y="80" width="74" height="352" fill="#FFFFFF"/>
+    <!-- Bowl + counter -->
+    <path
+      fill-rule="evenodd"
+      fill="#FFFFFF"
+      d="
+        M 194 80 A 92 92 0 0 1 194 264 Z
+        M 194 128 A 44 44 0 0 1 194 216 Z
+      "
+    />
+    <!-- Leg -->
+    <polygon points="194,264 288,264 406,432 316,432" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Wordmark -->
+  <!-- "Le" small / light -->
+  <text
+    x="232"
+    y="112"
+    font-family="Inter, system-ui, sans-serif"
+    font-size="40"
+    font-weight="300"
+    fill="#64748B"
+    letter-spacing="-0.01em"
+  >Le</text>
+
+  <!-- "Repère" bold -->
+  <text
+    x="232"
+    y="162"
+    font-family="Inter, system-ui, sans-serif"
+    font-size="62"
+    font-weight="700"
+    fill="#0F172A"
+    letter-spacing="-0.03em"
+  >Repère</text>
+</svg>
