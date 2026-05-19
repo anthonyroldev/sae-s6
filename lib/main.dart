@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:le_repere/pages/home_page.dart';
+import 'package:le_repere/pages/splash_page.dart';
 
 /// App entry point.
 void main() {
@@ -21,7 +21,7 @@ class MainApp extends StatelessWidget {
         fontFamily: 'Inter',
         useMaterial3: true,
       ),
-      home: const HomePage(),
+      home: const SplashPage(),
     );
   }
 }
