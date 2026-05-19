@@ -4,6 +4,8 @@ import 'bottom_nav_item.dart';
 import 'nav_bar_item.dart';
 
 class AppBottomNavBar extends StatelessWidget {
+  static const double _contentHeight = 56;
+  static const double _bottomGap = 12;
   final int currentIndex;
   final ValueChanged<int> onItemSelected;
   final List<NavBarItem> items;
@@ -17,22 +19,30 @@ class AppBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 64,
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: colorScheme.surface,
         border: Border(
-          top: BorderSide(color: const Color(0xFFE2E8F0), width: 1),
+          top: BorderSide(color: colorScheme.outlineVariant, width: 1),
         ),
       ),
-      child: Row(
-        children: items.asMap().entries.map((entry) {
-          return BottomNavItem(
-            item: entry.value,
-            isActive: entry.key == currentIndex,
-            onTap: () => onItemSelected(entry.key),
-          );
-        }).toList(),
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.only(bottom: _bottomGap),
+        child: SizedBox(
+          height: _contentHeight,
+          child: Row(
+            children: items.asMap().entries.map((entry) {
+              return BottomNavItem(
+                item: entry.value,
+                isActive: entry.key == currentIndex,
+                onTap: () => onItemSelected(entry.key),
+              );
+            }).toList(),
+          ),
+        ),
       ),
     );
   }
