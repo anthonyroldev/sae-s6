@@ -1,0 +1,22 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "le-repere-1b000",
+          "appId": "1:527389437123:android:44abfb3da476689ba34676",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "le-repere-1b000",
+          "configurations": {
+            "android": "1:527389437123:android:44abfb3da476689ba34676",
+            "ios": "1:527389437123:ios:813945c1e90e546fa34676"
+          }
+        }
+      }
+    }
+  }
+}
