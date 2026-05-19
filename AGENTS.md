@@ -126,7 +126,7 @@ class PlaceListScreen extends ConsumerWidget {
 
 ## Design System
 
-All visual constants are defined in `lib/core/constants/` and `lib/core/theme/`. Never hardcode colors, font sizes, or spacing inline.
+Never hardcode colors, font sizes, or spacing inline.
 
 | Token | Value |
 |---|---|
