@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:le_repere/pages/home_page.dart';
 
 /// App entry point.
 void main() {
@@ -12,9 +13,15 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'Le Repere',
-      home: Scaffold(body: SizedBox.shrink()),
+    return MaterialApp(
+      title: 'Le Repère',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.black),
+        fontFamily: 'Inter',
+        useMaterial3: true,
+      ),
+      home: const HomePage(),
     );
   }
 }
