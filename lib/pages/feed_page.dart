@@ -4,6 +4,7 @@ import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
 import 'feed/home_header.dart';
 import 'feed/lieu.dart';
+import 'feed/lieu_firestore_source.dart';
 import 'feed/place_card.dart';
 import 'feed/search_header_delegate.dart';
 
@@ -12,49 +13,10 @@ class FeedPage extends StatefulWidget {
   static const _filters = [
     'Pour vous',
     'Repas',
-    'Bibliothèque',
+    'Bibliotheque',
     'Assos',
     'Services',
-    'À proximité',
-  ];
-
-  static const _places = [
-    Lieu(
-      nom: 'Cafétéria INSA',
-      description: 'Le restaurant universitaire du campus',
-      categorie: 'Repas',
-      heures: '11h30 - 14h00',
-      icon: Icons.restaurant,
-      imageUrl: '',
-      isOpen: true,
-    ),
-    Lieu(
-      nom: 'BU Sciences',
-      description: 'Bibliothèque universitaire, accès WiFi',
-      categorie: 'Bibliothèque',
-      heures: '8h00 - 20h00',
-      icon: Icons.menu_book,
-      imageUrl: '',
-      isOpen: true,
-    ),
-    Lieu(
-      nom: 'BDE INSA',
-      description: 'Bureau des étudiants, salle des assos',
-      categorie: 'Associations',
-      heures: '14h00 - 18h00',
-      icon: Icons.groups,
-      imageUrl: '',
-      isOpen: false,
-    ),
-    Lieu(
-      nom: 'Le Kfet',
-      description: 'Petite restauration rapide, snacks, café',
-      categorie: 'Restauration',
-      heures: '8h00 - 16h00',
-      icon: Icons.local_cafe,
-      imageUrl: '',
-      isOpen: true,
-    ),
+    'A proximite',
   ];
 
   /// Creates the home feed page.
@@ -65,6 +27,7 @@ class FeedPage extends StatefulWidget {
 }
 
 class _FeedPageState extends State<FeedPage> {
+  final _lieuSource = LieuFirestoreSource();
   final _searchController = TextEditingController();
   final _searchQuery = ValueNotifier<String>('');
 
@@ -81,13 +44,9 @@ class _FeedPageState extends State<FeedPage> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
-        child: ValueListenableBuilder<String>(
-          valueListenable: _searchQuery,
-          builder: (context, query, _) {
-            final places = FeedPage._places
-                .where((place) => _matchesSearch(place, query))
-                .toList(growable: false);
-
+        child: StreamBuilder<List<Lieu>>(
+          stream: _lieuSource.watchAll(),
+          builder: (context, snapshot) {
             return CustomScrollView(
               slivers: [
                 const SliverToBoxAdapter(child: HomeHeader()),
@@ -99,42 +58,85 @@ class _FeedPageState extends State<FeedPage> {
                     onSearchChanged: (value) => _searchQuery.value = value,
                   ),
                 ),
-                if (places.isEmpty)
-                  const SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(
-                      child: Text(
-                        'Aucun lieu trouve',
-                        style: TextStyle(
-                          color: AppColors.secondaryText,
-                          fontSize: 16,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  )
-                else
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.md,
-                      AppSpacing.md,
-                      AppSpacing.md,
-                      AppSpacing.lg,
-                    ),
-                    sliver: SliverList.separated(
-                      itemCount: places.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: AppSpacing.md),
-                      itemBuilder: (context, index) =>
-                          PlaceCard(place: places[index]),
-                    ),
-                  ),
+                ..._buildContentSlivers(snapshot),
               ],
             );
           },
         ),
       ),
     );
+  }
+
+  List<Widget> _buildContentSlivers(AsyncSnapshot<List<Lieu>> snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ];
+    }
+
+    if (snapshot.hasError) {
+      return const [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(
+            child: Text(
+              'Erreur de chargement',
+              style: TextStyle(
+                color: AppColors.secondaryText,
+                fontSize: 16,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ),
+      ];
+    }
+
+    final places = snapshot.data ?? const <Lieu>[];
+    return [
+      ValueListenableBuilder<String>(
+        valueListenable: _searchQuery,
+        builder: (context, query, _) {
+          final filteredPlaces = places
+              .where((place) => _matchesSearch(place, query))
+              .toList(growable: false);
+
+          if (filteredPlaces.isEmpty) {
+            return const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Text(
+                  'Aucun lieu trouve',
+                  style: TextStyle(
+                    color: AppColors.secondaryText,
+                    fontSize: 16,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            );
+          }
+
+          return SliverPadding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.lg,
+            ),
+            sliver: SliverList.separated(
+              itemCount: filteredPlaces.length,
+              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
+              itemBuilder: (context, index) =>
+                  PlaceCard(place: filteredPlaces[index]),
+            ),
+          );
+        },
+      ),
+    ];
   }
 
   bool _matchesSearch(Lieu place, String query) {
