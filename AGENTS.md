@@ -47,11 +47,6 @@ flutter test                         # unit + widget tests
 flutter test --coverage              # with coverage report
 ```
 
-### Format
-```bash
-dart format lib/ test/
-```
-
 ---
 
 ## Project Structure
@@ -131,7 +126,7 @@ class PlaceListScreen extends ConsumerWidget {
 
 ## Design System
 
-All visual constants are defined in `lib/core/constants/` and `lib/core/theme/`. Never hardcode colors, font sizes, or spacing inline.
+Never hardcode colors, font sizes, or spacing inline.
 
 | Token | Value |
 |---|---|
@@ -184,7 +179,7 @@ Never expose Firebase config keys in code. Use `.env` or `--dart-define`.
 ## Git
 
 - **Branch from:** `develop`
-- **Branch naming:** `feature/<short-description>` or `fix/<short-description>`
+- **Branch naming:** `feat/<short-description>` or `fix/<short-description>`
 - **Commit style:** `type: short description` (e.g. `feat: add place list screen`, `fix: open hours null crash`)
 - **Never commit to:** `main` or `develop` directly — both are protected, PR required
 - Run `flutter analyze && flutter test` before opening a PR
