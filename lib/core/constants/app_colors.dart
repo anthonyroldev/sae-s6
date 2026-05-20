@@ -34,4 +34,7 @@ abstract final class AppColors {
 
   /// Error background color.
   static const errorBackground = Color(0xFFFEE2E2);
+
+  /// Subtle card shadow color.
+  static const cardShadow = Color(0x14000000);
 }
