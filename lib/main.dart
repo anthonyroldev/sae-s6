@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:le_repere/core/constants/app_colors.dart';
 import 'package:le_repere/pages/splash_page.dart';
 
 /// App entry point.
@@ -17,7 +18,12 @@ class MainApp extends StatelessWidget {
       title: 'Le Repère',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.black),
+        scaffoldBackgroundColor: AppColors.background,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primary,
+          primary: AppColors.primary,
+          surface: AppColors.surface,
+        ),
         fontFamily: 'Inter',
         useMaterial3: true,
       ),
