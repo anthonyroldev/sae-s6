@@ -1,5 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 /// Converts loose Firestore values to app model types.
 abstract final class FirestoreDataConverter {
+  static final _horaireRegex = RegExp(
+    r'^([01]?\d|2[0-3]):([0-5]\d)\s*-\s*([01]?\d|2[0-3]):([0-5]\d)$',
+  );
+
   static int toInt(Object? value) {
     if (value is int) {
       return value;
@@ -17,6 +23,29 @@ abstract final class FirestoreDataConverter {
     return double.tryParse(value?.toString() ?? '') ?? 0;
   }
 
+  static GeoPoint toGeoPoint(
+    Object? value, {
+    double fallbackLatitude = 0,
+    double fallbackLongitude = 0,
+  }) {
+    if (value is GeoPoint) {
+      return value;
+    }
+    if (value is Map<String, dynamic>) {
+      return GeoPoint(
+        toDouble(value['latitude'] ?? value['lat']),
+        toDouble(value['longitude'] ?? value['lng']),
+      );
+    }
+    if (value is Map) {
+      return GeoPoint(
+        toDouble(value['latitude'] ?? value['lat']),
+        toDouble(value['longitude'] ?? value['lng']),
+      );
+    }
+    return GeoPoint(fallbackLatitude, fallbackLongitude);
+  }
+
   static bool toBool(Object? value) {
     if (value is bool) {
       return value;
@@ -27,6 +56,39 @@ abstract final class FirestoreDataConverter {
   /// Converts a value to a string.
   static String toStringValue(Object? value) {
     return value?.toString() ?? '';
+  }
+
+  static String toHoraire(Object? value) {
+    if (value is Map) {
+      final start = value['debut'] ?? value['start'] ?? value['ouverture'];
+      final end = value['fin'] ?? value['end'] ?? value['fermeture'];
+      return _normalizeHoraire(
+        '${_normalizeHour(start)} - ${_normalizeHour(end)}',
+      );
+    }
+    return _normalizeHoraire(toStringValue(value));
+  }
+
+  /// Returns whether the current timestamp is inside the opening hours.
+  static bool isOpenFromHoraire({
+    required Object? currentTimestamp,
+    required String heures,
+  }) {
+    final normalized = toHoraire(heures);
+    final match = _horaireRegex.firstMatch(normalized);
+    if (match == null) {
+      return false;
+    }
+
+    final now = toDateTime(currentTimestamp);
+    final currentMinutes = now.hour * 60 + now.minute;
+    final startMinutes = toInt(match.group(1)) * 60 + toInt(match.group(2));
+    final endMinutes = toInt(match.group(3)) * 60 + toInt(match.group(4));
+
+    if (startMinutes <= endMinutes) {
+      return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+    }
+    return currentMinutes >= startMinutes || currentMinutes <= endMinutes;
   }
 
   static DateTime toDateTime(Object? value) {
@@ -45,5 +107,27 @@ abstract final class FirestoreDataConverter {
     }
     return DateTime.tryParse(value?.toString() ?? '') ??
         DateTime.fromMillisecondsSinceEpoch(0);
+  }
+
+  static String _normalizeHoraire(String value) {
+    final normalized = value
+        .trim()
+        .replaceAll('h', ':')
+        .replaceAll('H', ':')
+        .replaceAll('–', '-')
+        .replaceAll('—', '-');
+    final match = _horaireRegex.firstMatch(normalized);
+    if (match == null) {
+      return normalized;
+    }
+    final startHour = toInt(match.group(1)).toString().padLeft(2, '0');
+    final endHour = toInt(match.group(3)).toString().padLeft(2, '0');
+    return '$startHour:${match.group(2)} - $endHour:${match.group(4)}';
+  }
+
+  static String _normalizeHour(Object? value) {
+    return toStringValue(
+      value,
+    ).trim().replaceAll('h', ':').replaceAll('H', ':');
   }
 }

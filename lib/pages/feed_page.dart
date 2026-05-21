@@ -47,6 +47,10 @@ class _FeedPageState extends State<FeedPage> {
         child: StreamBuilder<List<Lieu>>(
           stream: _lieuSource.watchAll(),
           builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              debugPrint('Feed Firestore error: ${snapshot.error}');
+            }
+
             return CustomScrollView(
               slivers: [
                 const SliverToBoxAdapter(child: HomeHeader()),
@@ -78,12 +82,13 @@ class _FeedPageState extends State<FeedPage> {
     }
 
     if (snapshot.hasError) {
-      return const [
+      return [
         SliverFillRemaining(
           hasScrollBody: false,
           child: Center(
             child: Text(
-              'Erreur de chargement',
+              'Erreur de chargement\n${snapshot.error}',
+              textAlign: TextAlign.center,
               style: TextStyle(
                 color: AppColors.secondaryText,
                 fontSize: 16,

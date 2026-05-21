@@ -4,7 +4,7 @@ import 'lieu.dart';
 
 /// Firestore source for campus places.
 class LieuFirestoreSource {
-  static const _collectionPath = 'places';
+  static const _collectionPath = 'lieux';
   final CollectionReference<Lieu> _places;
 
   LieuFirestoreSource({FirebaseFirestore? firestore})
@@ -24,14 +24,15 @@ class LieuFirestoreSource {
 
   /// Watches all campus places.
   Stream<List<Lieu>> watchAll() {
-    return _places
-        .orderBy('nom')
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+    return _places.snapshots().map((snapshot) {
+      final places = snapshot.docs.map((doc) => doc.data()).toList();
+      places.sort((first, second) => first.nom.compareTo(second.nom));
+      return places;
+    });
   }
 
   /// Creates or updates a campus place.
   Future<void> save(Lieu lieu) {
-    return _places.doc(lieu.idLieu.toString()).set(lieu);
+    return _places.doc(lieu.id.toString()).set(lieu);
   }
 }
