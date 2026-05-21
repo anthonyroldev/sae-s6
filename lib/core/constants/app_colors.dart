@@ -37,4 +37,7 @@ abstract final class AppColors {
 
   /// Subtle card shadow color.
   static const cardShadow = Color(0x14000000);
+
+  /// Selected item background color.
+  static const selected = Color(0xFFDBEAFE);
 }

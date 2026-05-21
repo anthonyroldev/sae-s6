@@ -27,9 +27,7 @@ class PlaceFilterChip extends StatelessWidget {
       onTap: onSelected,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFFDBEAFE)
-              : AppColors.surfaceVariant,
+          color: isSelected ? AppColors.selected : AppColors.surfaceVariant,
           borderRadius: BorderRadius.circular(999),
         ),
         child: Padding(
