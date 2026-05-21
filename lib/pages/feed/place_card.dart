@@ -65,7 +65,7 @@ class PlaceCard extends StatelessWidget {
                       const SizedBox(width: AppSpacing.xs),
                       Text(
                         place.heures.isEmpty
-                            ? 'Horaires non renseignes'
+                            ? 'Horaires non renseignés'
                             : place.heures,
                         style: const TextStyle(
                           color: AppColors.secondaryText,
