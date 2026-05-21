@@ -66,6 +66,11 @@ abstract final class FirestoreDataConverter {
         '${_normalizeHour(start)} - ${_normalizeHour(end)}',
       );
     }
+    if (value is List && value.length >= 2) {
+      return _normalizeHoraire(
+        '${_normalizeHour(value[0])} - ${_normalizeHour(value[1])}',
+      );
+    }
     return _normalizeHoraire(toStringValue(value));
   }
 

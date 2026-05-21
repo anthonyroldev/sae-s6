@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
+import '../data/models/lieu.dart';
+import '../data/sources/lieu_firestore_source.dart';
 import 'feed/home_header.dart';
-import 'feed/lieu.dart';
-import 'feed/lieu_firestore_source.dart';
 import 'feed/place_card.dart';
 import 'feed/search_header_delegate.dart';
 

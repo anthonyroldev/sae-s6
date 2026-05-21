@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 
 import '../../core/utils/firestore_data_converter.dart';
 
@@ -13,9 +12,6 @@ class Lieu {
   final String imageUrl;
   final String categorie;
 
-  /// Local fallback icon.
-  final IconData icon;
-
   /// Creates a campus place.
   const Lieu({
     this.id = 0,
@@ -27,7 +23,6 @@ class Lieu {
     String? heures,
     String? photo,
     String? imageUrl,
-    this.icon = Icons.place,
   }) : horaireOuverture = horaireOuverture ?? heures ?? '',
        imageUrl = imageUrl ?? photo ?? '';
 
@@ -43,7 +38,11 @@ class Lieu {
         fallbackLongitude: FirestoreDataConverter.toDouble(map['longitude']),
       ),
       horaireOuverture: FirestoreDataConverter.toHoraire(
-        map['horaire'] ?? map['horaireOuverture'] ?? map['heures'],
+        map['horaire'] ??
+            map['horaires'] ??
+            map['horaireOuverture'] ??
+            map['heures'] ??
+            map['openingHours'],
       ),
       imageUrl: FirestoreDataConverter.toStringValue(
         map['photo'] ?? map['imageUrl'],

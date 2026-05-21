@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'lieu.dart';
+import '../models/lieu.dart';
 
 /// Firestore source for campus places.
 class LieuFirestoreSource {
