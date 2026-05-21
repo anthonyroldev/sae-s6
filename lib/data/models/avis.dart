@@ -11,7 +11,7 @@ class Avis {
 
   /// Creates a place review.
   const Avis({
-    required this.idAvis,
+    this.idAvis = 0,
     required this.note,
     required this.commentaire,
     required this.date,
@@ -19,13 +19,29 @@ class Avis {
     required this.idUtilisateur,
   });
 
+  /// Creates a new review with the current date.
+  factory Avis.create({
+    required int note,
+    required String commentaire,
+    required int idLieu,
+    required String idUtilisateur,
+  }) {
+    return Avis(
+      note: note,
+      commentaire: commentaire,
+      date: DateTime.now(),
+      idLieu: idLieu,
+      idUtilisateur: idUtilisateur,
+    );
+  }
+
   /// Creates a review from Firestore data.
   factory Avis.fromMap(Map<String, dynamic> map) {
     return Avis(
       idAvis: FirestoreDataConverter.toInt(map['idAvis']),
       note: FirestoreDataConverter.toInt(map['note']),
       commentaire: FirestoreDataConverter.toStringValue(map['commentaire']),
-      date: FirestoreDataConverter.toDateTime(map['date']),
+      date: FirestoreDataConverter.toDateTime(map['date'] ?? map['createdAt']),
       idLieu: FirestoreDataConverter.toInt(map['idLieu']),
       idUtilisateur: FirestoreDataConverter.toStringValue(map['idUtilisateur']),
     );
@@ -37,7 +53,7 @@ class Avis {
       'idAvis': idAvis,
       'note': note,
       'commentaire': commentaire,
-      'date': date,
+      'createdAt': date,
       'idLieu': idLieu,
       'idUtilisateur': idUtilisateur,
     };

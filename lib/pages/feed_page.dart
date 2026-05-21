@@ -10,14 +10,7 @@ import 'feed/search_header_delegate.dart';
 
 /// Home feed showing available campus places.
 class FeedPage extends StatefulWidget {
-  static const _filters = [
-    'Pour vous',
-    'Repas',
-    'Bibliotheque',
-    'Assos',
-    'Services',
-    'A proximite',
-  ];
+  static const _filters = LieuCategorie.values;
 
   /// Creates the home feed page.
   const FeedPage({super.key});
@@ -30,11 +23,13 @@ class _FeedPageState extends State<FeedPage> {
   final _lieuSource = LieuFirestoreSource();
   final _searchController = TextEditingController();
   final _searchQuery = ValueNotifier<String>('');
+  final _selectedCategory = ValueNotifier<LieuCategorie>(LieuCategorie.all);
 
   @override
   void dispose() {
     _searchController.dispose();
     _searchQuery.dispose();
+    _selectedCategory.dispose();
     super.dispose();
   }
 
@@ -58,8 +53,12 @@ class _FeedPageState extends State<FeedPage> {
                   pinned: true,
                   delegate: SearchHeaderDelegate(
                     filters: FeedPage._filters,
+                    selectedFilter: _selectedCategory.value,
                     searchController: _searchController,
                     onSearchChanged: (value) => _searchQuery.value = value,
+                    onFilterSelected: (value) {
+                      setState(() => _selectedCategory.value = value);
+                    },
                   ),
                 ),
                 ..._buildContentSlivers(snapshot),
@@ -106,7 +105,11 @@ class _FeedPageState extends State<FeedPage> {
         valueListenable: _searchQuery,
         builder: (context, query, _) {
           final filteredPlaces = places
-              .where((place) => _matchesSearch(place, query))
+              .where(
+                (place) =>
+                    _matchesSearch(place, query) &&
+                    _matchesFilter(place, _selectedCategory.value),
+              )
               .toList(growable: false);
 
           if (filteredPlaces.isEmpty) {
@@ -151,5 +154,9 @@ class _FeedPageState extends State<FeedPage> {
     }
 
     return place.nom.toLowerCase().contains(search);
+  }
+
+  bool _matchesFilter(Lieu place, LieuCategorie filter) {
+    return filter == LieuCategorie.all || place.categorie == filter;
   }
 }

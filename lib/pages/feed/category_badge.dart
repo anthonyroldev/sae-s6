@@ -16,7 +16,7 @@ class CategoryBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PlaceBadge(
-      label: place.categorie,
+      label: place.categorie.label,
       color: AppColors.secondaryText,
       backgroundColor: AppColors.surfaceVariant,
       icon: iconForCategory(place.categorie),
