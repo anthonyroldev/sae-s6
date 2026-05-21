@@ -14,8 +14,8 @@ class LieuxData {
       icon: Icons.restaurant,
       imageUrl: '',
       isOpen: true,
-      latitude: 0,
-      longitude: 0,
+      latitude: 50.3560,
+      longitude: 3.5180,
     ),
     Lieu(
       nom: 'BU Sciences',
@@ -25,8 +25,8 @@ class LieuxData {
       icon: Icons.menu_book,
       imageUrl: '',
       isOpen: true,
-      latitude: 0,
-      longitude: 0,
+      latitude: 50.3556,
+      longitude: 3.5174,
     ),
     Lieu(
       nom: 'BDE INSA',
@@ -36,8 +36,8 @@ class LieuxData {
       icon: Icons.groups,
       imageUrl: '',
       isOpen: false,
-      latitude: 0,
-      longitude: 0,
+      latitude: 50.3552,
+      longitude: 3.5187,
     ),
     Lieu(
       nom: 'Le Kfet',
@@ -47,8 +47,8 @@ class LieuxData {
       icon: Icons.local_cafe,
       imageUrl: '',
       isOpen: true,
-      latitude: 0,
-      longitude: 0,
+      latitude: 50.3558,
+      longitude: 3.5191,
     ),
   ];
 
