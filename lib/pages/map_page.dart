@@ -3,7 +3,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../core/constants/app_colors.dart';
-import 'lieux_data.dart';
 
 /// Campus map page.
 class MapPage extends StatelessWidget {
