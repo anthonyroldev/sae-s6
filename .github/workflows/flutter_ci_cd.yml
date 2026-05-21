@@ -44,6 +44,11 @@ jobs:
           flutter-version: '3.41.6'
           channel: stable
 
+      - name: Load Google Service file
+        env:
+          DATA: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: echo $DATA | base64 -di > android/app/google-services.json
+
       - name: Install dependencies
         run: flutter pub get
 
