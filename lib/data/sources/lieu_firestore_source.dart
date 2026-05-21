@@ -13,11 +13,18 @@ class LieuFirestoreSource {
           .withConverter<Lieu>(
             fromFirestore: (snapshot, _) {
               final data = snapshot.data() ?? <String, dynamic>{};
-              return Lieu.fromMap({
-                ...data,
-                if (!data.containsKey('idLieu'))
-                  'idLieu': int.tryParse(snapshot.id) ?? 0,
-              });
+              if (data.containsKey('idLieu')) {
+                return Lieu.fromMap(data);
+              }
+
+              final parsedId = int.tryParse(snapshot.id);
+              if (parsedId == null) {
+                throw FormatException(
+                  'Missing idLieu and non-numeric document ID for lieu: ${snapshot.id}',
+                );
+              }
+
+              return Lieu.fromMap({...data, 'idLieu': parsedId});
             },
             toFirestore: (lieu, _) => lieu.toMap(),
           );
