@@ -8,6 +8,7 @@ import 'add_lieu_page.dart';
 import 'feed/home_header.dart';
 import 'feed/place_card.dart';
 import 'feed/search_header_delegate.dart';
+import './lieux_data.dart';
 
 /// Home feed showing available campus places.
 class FeedPage extends StatefulWidget {
