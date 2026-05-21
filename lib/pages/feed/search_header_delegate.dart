@@ -2,21 +2,26 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
+import '../../data/models/lieu.dart';
 import 'place_filter_chip.dart';
 import 'search_field.dart';
 
 /// Sticky search and filter header.
 class SearchHeaderDelegate extends SliverPersistentHeaderDelegate {
   static const double _height = 108;
-  final List<String> filters;
+  final List<LieuCategorie> filters;
+  final LieuCategorie selectedFilter;
   final TextEditingController searchController;
   final ValueChanged<String> onSearchChanged;
+  final ValueChanged<LieuCategorie> onFilterSelected;
 
   /// Creates a sticky search and filter header.
   const SearchHeaderDelegate({
     required this.filters,
+    required this.selectedFilter,
     required this.searchController,
     required this.onSearchChanged,
+    required this.onFilterSelected,
   });
 
   @override
@@ -68,8 +73,9 @@ class SearchHeaderDelegate extends SliverPersistentHeaderDelegate {
                     const SizedBox(width: AppSpacing.sm),
                 itemBuilder: (context, index) {
                   return PlaceFilterChip(
-                    label: filters[index],
-                    isSelected: index == 0,
+                    label: filters[index].label,
+                    isSelected: filters[index] == selectedFilter,
+                    onSelected: () => onFilterSelected(filters[index]),
                   );
                 },
               ),
@@ -83,7 +89,9 @@ class SearchHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant SearchHeaderDelegate oldDelegate) {
     return oldDelegate.filters != filters ||
+        oldDelegate.selectedFilter != selectedFilter ||
         oldDelegate.searchController != searchController ||
-        oldDelegate.onSearchChanged != onSearchChanged;
+        oldDelegate.onSearchChanged != onSearchChanged ||
+        oldDelegate.onFilterSelected != onFilterSelected;
   }
 }

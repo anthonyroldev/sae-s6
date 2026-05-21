@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
+import '../../data/models/lieu.dart';
 import 'category_badge.dart';
-import 'lieu.dart';
+import 'place_category_icon.dart';
 import 'status_badge.dart';
 
 /// Place image with category and status overlays.
@@ -26,7 +27,11 @@ class PlaceImage extends StatelessWidget {
             fit: BoxFit.cover,
             errorBuilder: (_, _, _) => ColoredBox(
               color: AppColors.surfaceVariant,
-              child: Icon(place.icon, color: AppColors.secondaryText, size: 48),
+              child: Icon(
+                iconForCategory(place.categorie),
+                color: AppColors.secondaryText,
+                size: 48,
+              ),
             ),
           ),
           Positioned(

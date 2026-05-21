@@ -2,60 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
+import '../data/models/lieu.dart';
+import '../data/sources/lieu_firestore_source.dart';
 import 'feed/home_header.dart';
-import 'feed/lieu.dart';
 import 'feed/place_card.dart';
 import 'feed/search_header_delegate.dart';
 
 /// Home feed showing available campus places.
 class FeedPage extends StatefulWidget {
-  static const _filters = [
-    'Pour vous',
-    'Repas',
-    'Bibliothèque',
-    'Assos',
-    'Services',
-    'À proximité',
-  ];
-
-  static const _places = [
-    Lieu(
-      nom: 'Cafétéria INSA',
-      description: 'Le restaurant universitaire du campus',
-      categorie: 'Repas',
-      heures: '11h30 - 14h00',
-      icon: Icons.restaurant,
-      imageUrl: '',
-      isOpen: true,
-    ),
-    Lieu(
-      nom: 'BU Sciences',
-      description: 'Bibliothèque universitaire, accès WiFi',
-      categorie: 'Bibliothèque',
-      heures: '8h00 - 20h00',
-      icon: Icons.menu_book,
-      imageUrl: '',
-      isOpen: true,
-    ),
-    Lieu(
-      nom: 'BDE INSA',
-      description: 'Bureau des étudiants, salle des assos',
-      categorie: 'Associations',
-      heures: '14h00 - 18h00',
-      icon: Icons.groups,
-      imageUrl: '',
-      isOpen: false,
-    ),
-    Lieu(
-      nom: 'Le Kfet',
-      description: 'Petite restauration rapide, snacks, café',
-      categorie: 'Restauration',
-      heures: '8h00 - 16h00',
-      icon: Icons.local_cafe,
-      imageUrl: '',
-      isOpen: true,
-    ),
-  ];
+  static const _filters = LieuCategorie.values;
 
   /// Creates the home feed page.
   const FeedPage({super.key});
@@ -65,13 +20,16 @@ class FeedPage extends StatefulWidget {
 }
 
 class _FeedPageState extends State<FeedPage> {
+  final _lieuSource = LieuFirestoreSource();
   final _searchController = TextEditingController();
   final _searchQuery = ValueNotifier<String>('');
+  final _selectedCategory = ValueNotifier<LieuCategorie>(LieuCategorie.all);
 
   @override
   void dispose() {
     _searchController.dispose();
     _searchQuery.dispose();
+    _selectedCategory.dispose();
     super.dispose();
   }
 
@@ -81,12 +39,12 @@ class _FeedPageState extends State<FeedPage> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
-        child: ValueListenableBuilder<String>(
-          valueListenable: _searchQuery,
-          builder: (context, query, _) {
-            final places = FeedPage._places
-                .where((place) => _matchesSearch(place, query))
-                .toList(growable: false);
+        child: StreamBuilder<List<Lieu>>(
+          stream: _lieuSource.watchAll(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              debugPrint('Feed Firestore error: ${snapshot.error}');
+            }
 
             return CustomScrollView(
               slivers: [
@@ -95,46 +53,98 @@ class _FeedPageState extends State<FeedPage> {
                   pinned: true,
                   delegate: SearchHeaderDelegate(
                     filters: FeedPage._filters,
+                    selectedFilter: _selectedCategory.value,
                     searchController: _searchController,
                     onSearchChanged: (value) => _searchQuery.value = value,
+                    onFilterSelected: (value) {
+                      setState(() => _selectedCategory.value = value);
+                    },
                   ),
                 ),
-                if (places.isEmpty)
-                  const SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(
-                      child: Text(
-                        'Aucun lieu trouve',
-                        style: TextStyle(
-                          color: AppColors.secondaryText,
-                          fontSize: 16,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  )
-                else
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.md,
-                      AppSpacing.md,
-                      AppSpacing.md,
-                      AppSpacing.lg,
-                    ),
-                    sliver: SliverList.separated(
-                      itemCount: places.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: AppSpacing.md),
-                      itemBuilder: (context, index) =>
-                          PlaceCard(place: places[index]),
-                    ),
-                  ),
+                ..._buildContentSlivers(snapshot),
               ],
             );
           },
         ),
       ),
     );
+  }
+
+  List<Widget> _buildContentSlivers(AsyncSnapshot<List<Lieu>> snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ];
+    }
+
+    if (snapshot.hasError) {
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(
+            child: Text(
+              'Erreur de chargement\n${snapshot.error}',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.secondaryText,
+                fontSize: 16,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ),
+      ];
+    }
+
+    final places = snapshot.data ?? const <Lieu>[];
+    return [
+      ValueListenableBuilder<String>(
+        valueListenable: _searchQuery,
+        builder: (context, query, _) {
+          final filteredPlaces = places
+              .where(
+                (place) =>
+                    _matchesSearch(place, query) &&
+                    _matchesFilter(place, _selectedCategory.value),
+              )
+              .toList(growable: false);
+
+          if (filteredPlaces.isEmpty) {
+            return const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Text(
+                  'Aucun lieu trouve',
+                  style: TextStyle(
+                    color: AppColors.secondaryText,
+                    fontSize: 16,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            );
+          }
+
+          return SliverPadding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.lg,
+            ),
+            sliver: SliverList.separated(
+              itemCount: filteredPlaces.length,
+              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
+              itemBuilder: (context, index) =>
+                  PlaceCard(place: filteredPlaces[index]),
+            ),
+          );
+        },
+      ),
+    ];
   }
 
   bool _matchesSearch(Lieu place, String query) {
@@ -144,5 +154,9 @@ class _FeedPageState extends State<FeedPage> {
     }
 
     return place.nom.toLowerCase().contains(search);
+  }
+
+  bool _matchesFilter(Lieu place, LieuCategorie filter) {
+    return filter == LieuCategorie.all || place.categorie == filter;
   }
 }

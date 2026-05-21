@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
-import 'lieu.dart';
+import '../../data/models/lieu.dart';
 import 'place_image.dart';
 
 /// Card displaying one campus place.
@@ -64,7 +64,9 @@ class PlaceCard extends StatelessWidget {
                       ),
                       const SizedBox(width: AppSpacing.xs),
                       Text(
-                        place.heures,
+                        place.heures.isEmpty
+                            ? 'Horaires non renseignés'
+                            : place.heures,
                         style: const TextStyle(
                           color: AppColors.secondaryText,
                           fontSize: 14,

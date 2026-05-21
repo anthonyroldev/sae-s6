@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
-import 'lieu.dart';
+import '../../data/models/lieu.dart';
 import 'place_badge.dart';
+import 'place_category_icon.dart';
 
 /// Place category badge.
 class CategoryBadge extends StatelessWidget {
@@ -15,10 +16,10 @@ class CategoryBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PlaceBadge(
-      label: place.categorie,
+      label: place.categorie.label,
       color: AppColors.secondaryText,
       backgroundColor: AppColors.surfaceVariant,
-      icon: place.icon,
+      icon: iconForCategory(place.categorie),
     );
   }
 }
