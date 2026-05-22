@@ -13,18 +13,10 @@ class LieuFirestoreSource {
           .withConverter<Lieu>(
             fromFirestore: (snapshot, _) {
               final data = snapshot.data() ?? <String, dynamic>{};
-              if (data.containsKey('idLieu')) {
-                return Lieu.fromMap(data);
-              }
-
-              final parsedId = int.tryParse(snapshot.id);
-              if (parsedId == null) {
-                throw FormatException(
-                  'Missing idLieu and non-numeric document ID for lieu: ${snapshot.id}',
-                );
-              }
-
-              return Lieu.fromMap({...data, 'idLieu': parsedId});
+              return Lieu.fromMap({
+                ...data,
+                if (!data.containsKey('idLieu')) 'idLieu': snapshot.id,
+              });
             },
             toFirestore: (lieu, _) => lieu.toMap(),
           );
@@ -40,6 +32,6 @@ class LieuFirestoreSource {
 
   /// Creates or updates a campus place.
   Future<void> save(Lieu lieu) {
-    return _places.doc(lieu.id.toString()).set(lieu);
+    return _places.doc(lieu.id).set(lieu);
   }
 }

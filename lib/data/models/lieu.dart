@@ -56,7 +56,7 @@ enum LieuCategorie {
 
 /// Campus place ready for Firestore reads and writes.
 class Lieu {
-  final int id;
+  final String id;
   final String nom;
   final String description;
   final GeoPoint adresse;
@@ -66,7 +66,7 @@ class Lieu {
 
   /// Creates a campus place.
   const Lieu({
-    this.id = 0,
+    this.id = '',
     required this.nom,
     required this.description,
     this.adresse = const GeoPoint(0, 0),
@@ -81,7 +81,7 @@ class Lieu {
   /// Creates a place from Firestore data.
   factory Lieu.fromMap(Map<String, dynamic> map) {
     return Lieu(
-      id: FirestoreDataConverter.toInt(map['idLieu']),
+      id: FirestoreDataConverter.toStringValue(map['idLieu']),
       nom: FirestoreDataConverter.toStringValue(map['nom']),
       description: FirestoreDataConverter.toStringValue(map['description']),
       adresse: FirestoreDataConverter.toGeoPoint(
