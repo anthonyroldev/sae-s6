@@ -5,8 +5,11 @@ import 'settings_tile.dart';
 
 /// Settings actions displayed on the profile page.
 class SettingsCard extends StatelessWidget {
+  /// Called when the user taps "Déconnexion".
+  final VoidCallback onLogout;
+
   /// Creates the settings card.
-  const SettingsCard({super.key});
+  const SettingsCard({super.key, required this.onLogout});
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +44,7 @@ class SettingsCard extends StatelessWidget {
             SettingsTile(
               title: 'Déconnexion',
               textColor: AppColors.errorText,
-              onPressed: () {},
+              onPressed: onLogout,
             ),
           ],
         ),
