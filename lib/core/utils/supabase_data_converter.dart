@@ -1,5 +1,5 @@
 /// Converts loose back-end values (Supabase/JSON) to app model types.
-abstract final class FirestoreDataConverter {
+abstract final class SupabaseDataConverter {
   static final _horaireRegex = RegExp(
     r'^([01]?\d|2[0-3]):([0-5]\d)\s*-\s*([01]?\d|2[0-3]):([0-5]\d)$',
   );

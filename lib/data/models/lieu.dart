@@ -1,4 +1,4 @@
-import '../../core/utils/firestore_data_converter.dart';
+import '../../core/utils/supabase_data_converter.dart';
 
 /// Place category used by Firestore and feed filters.
 enum LieuCategorie {
@@ -19,7 +19,7 @@ enum LieuCategorie {
 
   /// Builds a category from Firestore data.
   static LieuCategorie fromValue(Object? value) {
-    final normalized = FirestoreDataConverter.toStringValue(value)
+    final normalized = SupabaseDataConverter.toStringValue(value)
         .trim()
         .toLowerCase()
         .replaceAll(String.fromCharCode(0x00e9), 'e')
@@ -81,21 +81,19 @@ class Lieu {
   /// Creates a place from a Supabase row.
   factory Lieu.fromMap(Map<String, dynamic> map) {
     return Lieu(
-      id: FirestoreDataConverter.toStringValue(map['id'] ?? map['idLieu']),
-      nom: FirestoreDataConverter.toStringValue(map['nom']),
-      description: FirestoreDataConverter.toStringValue(map['description']),
-      latitude: FirestoreDataConverter.toDouble(map['latitude'] ?? map['lat']),
-      longitude: FirestoreDataConverter.toDouble(
-        map['longitude'] ?? map['lng'],
-      ),
-      horaireOuverture: FirestoreDataConverter.toHoraire(
+      id: SupabaseDataConverter.toStringValue(map['id'] ?? map['idLieu']),
+      nom: SupabaseDataConverter.toStringValue(map['nom']),
+      description: SupabaseDataConverter.toStringValue(map['description']),
+      latitude: SupabaseDataConverter.toDouble(map['latitude'] ?? map['lat']),
+      longitude: SupabaseDataConverter.toDouble(map['longitude'] ?? map['lng']),
+      horaireOuverture: SupabaseDataConverter.toHoraire(
         map['horaire'] ??
             map['horaires'] ??
             map['horaireOuverture'] ??
             map['heures'] ??
             map['openingHours'],
       ),
-      imageUrl: FirestoreDataConverter.toStringValue(
+      imageUrl: SupabaseDataConverter.toStringValue(
         map['image_url'] ?? map['photo'] ?? map['imageUrl'],
       ),
       categorie: LieuCategorie.fromValue(map['categorie']),
@@ -143,7 +141,7 @@ class Lieu {
   String get heures => horaireOuverture;
 
   /// Whether the place is currently open.
-  bool get isOpen => FirestoreDataConverter.isOpenFromHoraire(
+  bool get isOpen => SupabaseDataConverter.isOpenFromHoraire(
     currentTimestamp: DateTime.now(),
     heures: horaireOuverture,
   );

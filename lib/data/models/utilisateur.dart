@@ -1,4 +1,4 @@
-import '../../core/utils/firestore_data_converter.dart';
+import '../../core/utils/supabase_data_converter.dart';
 
 /// App user ready for Supabase reads and writes.
 ///
@@ -21,10 +21,10 @@ class Utilisateur {
   /// Creates a user from a Supabase row.
   factory Utilisateur.fromMap(Map<String, dynamic> map) {
     return Utilisateur(
-      id: FirestoreDataConverter.toStringValue(map['id']),
-      nom: FirestoreDataConverter.toStringValue(map['nom']),
-      email: FirestoreDataConverter.toStringValue(map['email']),
-      positionGps: FirestoreDataConverter.toStringValue(
+      id: SupabaseDataConverter.toStringValue(map['id']),
+      nom: SupabaseDataConverter.toStringValue(map['nom']),
+      email: SupabaseDataConverter.toStringValue(map['email']),
+      positionGps: SupabaseDataConverter.toStringValue(
         map['position_gps'] ?? map['positionGPS'] ?? map['positionGps'],
       ),
     );

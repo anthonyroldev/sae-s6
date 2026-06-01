@@ -1,4 +1,4 @@
-import '../../core/utils/firestore_data_converter.dart';
+import '../../core/utils/supabase_data_converter.dart';
 
 /// Place review ready for Supabase reads and writes.
 class Avis {
@@ -38,16 +38,16 @@ class Avis {
   /// Creates a review from a Supabase row.
   factory Avis.fromMap(Map<String, dynamic> map) {
     return Avis(
-      idAvis: FirestoreDataConverter.toInt(map['id_avis'] ?? map['idAvis']),
-      note: FirestoreDataConverter.toInt(map['note']),
-      commentaire: FirestoreDataConverter.toStringValue(map['commentaire']),
-      date: FirestoreDataConverter.toDateTime(
+      idAvis: SupabaseDataConverter.toInt(map['id_avis'] ?? map['idAvis']),
+      note: SupabaseDataConverter.toInt(map['note']),
+      commentaire: SupabaseDataConverter.toStringValue(map['commentaire']),
+      date: SupabaseDataConverter.toDateTime(
         map['created_at'] ?? map['date'] ?? map['createdAt'],
       ),
-      idLieu: FirestoreDataConverter.toStringValue(
+      idLieu: SupabaseDataConverter.toStringValue(
         map['id_lieu'] ?? map['idLieu'],
       ),
-      idUtilisateur: FirestoreDataConverter.toStringValue(
+      idUtilisateur: SupabaseDataConverter.toStringValue(
         map['id_utilisateur'] ?? map['idUtilisateur'],
       ),
     );
