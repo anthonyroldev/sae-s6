@@ -1,4 +1,4 @@
-import '../../core/utils/firestore_data_converter.dart';
+import '../../core/utils/supabase_data_converter.dart';
 
 /// Proposed place ready for Firestore reads and writes.
 class PropositionLieu {
@@ -20,11 +20,11 @@ class PropositionLieu {
   /// Creates a proposal from Firestore data.
   factory PropositionLieu.fromMap(Map<String, dynamic> map) {
     return PropositionLieu(
-      idProposition: FirestoreDataConverter.toInt(map['idProposition']),
-      statut: FirestoreDataConverter.toStringValue(map['statut']),
-      idLieu: FirestoreDataConverter.toInt(map['idLieu']),
-      idUtilisateur: FirestoreDataConverter.toStringValue(map['idUtilisateur']),
-      idAdministrateur: FirestoreDataConverter.toStringValue(
+      idProposition: SupabaseDataConverter.toInt(map['idProposition']),
+      statut: SupabaseDataConverter.toStringValue(map['statut']),
+      idLieu: SupabaseDataConverter.toInt(map['idLieu']),
+      idUtilisateur: SupabaseDataConverter.toStringValue(map['idUtilisateur']),
+      idAdministrateur: SupabaseDataConverter.toStringValue(
         map['idAdministrateur'],
       ),
     );

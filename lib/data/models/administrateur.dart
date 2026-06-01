@@ -1,4 +1,4 @@
-import '../../core/utils/firestore_data_converter.dart';
+import '../../core/utils/supabase_data_converter.dart';
 import 'utilisateur.dart';
 
 /// Administrator user.
@@ -14,10 +14,10 @@ class Administrateur extends Utilisateur {
   /// Creates an administrator from Firestore data.
   factory Administrateur.fromMap(Map<String, dynamic> map) {
     return Administrateur(
-      id: FirestoreDataConverter.toStringValue(map['id']),
-      nom: FirestoreDataConverter.toStringValue(map['nom']),
-      email: FirestoreDataConverter.toStringValue(map['email']),
-      positionGps: FirestoreDataConverter.toStringValue(
+      id: SupabaseDataConverter.toStringValue(map['id']),
+      nom: SupabaseDataConverter.toStringValue(map['nom']),
+      email: SupabaseDataConverter.toStringValue(map['email']),
+      positionGps: SupabaseDataConverter.toStringValue(
         map['positionGPS'] ?? map['positionGps'],
       ),
     );

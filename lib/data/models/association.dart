@@ -1,4 +1,4 @@
-import '../../core/utils/firestore_data_converter.dart';
+import '../../core/utils/supabase_data_converter.dart';
 
 /// Campus association ready for Firestore reads and writes.
 class Association {
@@ -17,10 +17,10 @@ class Association {
   /// Creates an association from Firestore data.
   factory Association.fromMap(Map<String, dynamic> map) {
     return Association(
-      idAssociation: FirestoreDataConverter.toInt(map['idAssociation']),
-      nom: FirestoreDataConverter.toStringValue(map['nom']),
-      description: FirestoreDataConverter.toStringValue(map['description']),
-      contact: FirestoreDataConverter.toStringValue(map['contact']),
+      idAssociation: SupabaseDataConverter.toInt(map['idAssociation']),
+      nom: SupabaseDataConverter.toStringValue(map['nom']),
+      description: SupabaseDataConverter.toStringValue(map['description']),
+      contact: SupabaseDataConverter.toStringValue(map['contact']),
     );
   }
 

@@ -1,13 +1,28 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:le_repere/core/constants/app_colors.dart';
-import 'package:le_repere/firebase_options.dart';
 import 'package:le_repere/pages/splash_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// App entry point.
+/// Supabase project URL, injected at build time via
+/// `--dart-define=SUPABASE_URL=...`.
+const String _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+
+/// Supabase anonymous (public) key, injected at build time via
+/// `--dart-define=SUPABASE_ANON_KEY=...`.
+const String _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+
+/// App entry point. The app uses Supabase for both auth and data.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  assert(
+    _supabaseUrl.isNotEmpty && _supabaseAnonKey.isNotEmpty,
+    'Missing Supabase config. Run with '
+    '--dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...',
+  );
+
+  await Supabase.initialize(url: _supabaseUrl, anonKey: _supabaseAnonKey);
+
   runApp(const MainApp());
 }
 

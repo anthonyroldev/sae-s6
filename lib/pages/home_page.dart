@@ -24,7 +24,7 @@ class _HomePageState extends State<HomePage> {
     NavBarItem(icon: Icons.person_outline, activeIcon: Icons.person),
   ];
 
-  static const _pages = [FeedPage(), MapPage(), ProfilPage()];
+  static final _pages = <Widget>[const FeedPage(), const MapPage(), ProfilPage()];
 
   @override
   Widget build(BuildContext context) {

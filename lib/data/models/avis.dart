@@ -1,12 +1,12 @@
-import '../../core/utils/firestore_data_converter.dart';
+import '../../core/utils/supabase_data_converter.dart';
 
-/// Place review ready for Firestore reads and writes.
+/// Place review ready for Supabase reads and writes.
 class Avis {
   final int idAvis;
   final int note;
   final String commentaire;
   final DateTime date;
-  final int idLieu;
+  final String idLieu;
   final String idUtilisateur;
 
   /// Creates a place review.
@@ -23,7 +23,7 @@ class Avis {
   factory Avis.create({
     required int note,
     required String commentaire,
-    required int idLieu,
+    required String idLieu,
     required String idUtilisateur,
   }) {
     return Avis(
@@ -35,27 +35,36 @@ class Avis {
     );
   }
 
-  /// Creates a review from Firestore data.
+  /// Creates a review from a Supabase row.
   factory Avis.fromMap(Map<String, dynamic> map) {
     return Avis(
-      idAvis: FirestoreDataConverter.toInt(map['idAvis']),
-      note: FirestoreDataConverter.toInt(map['note']),
-      commentaire: FirestoreDataConverter.toStringValue(map['commentaire']),
-      date: FirestoreDataConverter.toDateTime(map['date'] ?? map['createdAt']),
-      idLieu: FirestoreDataConverter.toInt(map['idLieu']),
-      idUtilisateur: FirestoreDataConverter.toStringValue(map['idUtilisateur']),
+      idAvis: SupabaseDataConverter.toInt(map['id_avis'] ?? map['idAvis']),
+      note: SupabaseDataConverter.toInt(map['note']),
+      commentaire: SupabaseDataConverter.toStringValue(map['commentaire']),
+      date: SupabaseDataConverter.toDateTime(
+        map['created_at'] ?? map['date'] ?? map['createdAt'],
+      ),
+      idLieu: SupabaseDataConverter.toStringValue(
+        map['id_lieu'] ?? map['idLieu'],
+      ),
+      idUtilisateur: SupabaseDataConverter.toStringValue(
+        map['id_utilisateur'] ?? map['idUtilisateur'],
+      ),
     );
   }
 
-  /// Converts this review to Firestore data.
+  /// Converts this review to a Supabase row.
+  ///
+  /// The identity column `id_avis` is omitted when unset (`0`) so Postgres can
+  /// generate it on insert.
   Map<String, dynamic> toMap() {
     return {
-      'idAvis': idAvis,
+      if (idAvis != 0) 'id_avis': idAvis,
       'note': note,
       'commentaire': commentaire,
-      'createdAt': date,
-      'idLieu': idLieu,
-      'idUtilisateur': idUtilisateur,
+      'created_at': date.toIso8601String(),
+      'id_lieu': idLieu,
+      'id_utilisateur': idUtilisateur,
     };
   }
 }

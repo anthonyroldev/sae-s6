@@ -1,7 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
-/// Converts loose Firestore values to app model types.
-abstract final class FirestoreDataConverter {
+/// Converts loose back-end values (Supabase/JSON) to app model types.
+abstract final class SupabaseDataConverter {
   static final _horaireRegex = RegExp(
     r'^([01]?\d|2[0-3]):([0-5]\d)\s*-\s*([01]?\d|2[0-3]):([0-5]\d)$',
   );
@@ -21,29 +19,6 @@ abstract final class FirestoreDataConverter {
       return value.toDouble();
     }
     return double.tryParse(value?.toString() ?? '') ?? 0;
-  }
-
-  static GeoPoint toGeoPoint(
-    Object? value, {
-    double fallbackLatitude = 0,
-    double fallbackLongitude = 0,
-  }) {
-    if (value is GeoPoint) {
-      return value;
-    }
-    if (value is Map<String, dynamic>) {
-      return GeoPoint(
-        toDouble(value['latitude'] ?? value['lat']),
-        toDouble(value['longitude'] ?? value['lng']),
-      );
-    }
-    if (value is Map) {
-      return GeoPoint(
-        toDouble(value['latitude'] ?? value['lat']),
-        toDouble(value['longitude'] ?? value['lng']),
-      );
-    }
-    return GeoPoint(fallbackLatitude, fallbackLongitude);
   }
 
   static bool toBool(Object? value) {
@@ -100,15 +75,8 @@ abstract final class FirestoreDataConverter {
     if (value is DateTime) {
       return value;
     }
-    try {
-      final dynamic raw = value;
-      final result = raw?.toDate();
-      if (result is DateTime) {
-        return result;
-      }
-    } on Object {
-      return DateTime.tryParse(value?.toString() ?? '') ??
-          DateTime.fromMillisecondsSinceEpoch(0);
+    if (value is int) {
+      return DateTime.fromMillisecondsSinceEpoch(value);
     }
     return DateTime.tryParse(value?.toString() ?? '') ??
         DateTime.fromMillisecondsSinceEpoch(0);

@@ -1,10 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
 import '../data/models/lieu.dart';
-import '../data/sources/lieu_firestore_source.dart';
+import '../data/sources/lieu_supabase_source.dart';
 
 /// Page used to suggest and create a new campus place.
 class AddLieuPage extends StatefulWidget {
@@ -17,7 +16,7 @@ class AddLieuPage extends StatefulWidget {
 
 class _AddLieuPageState extends State<AddLieuPage> {
   final _formKey = GlobalKey<FormState>();
-  final _source = LieuFirestoreSource();
+  final _source = LieuSupabaseSource();
   final _nomController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _latitudeController = TextEditingController();
@@ -240,9 +239,11 @@ class _AddLieuPageState extends State<AddLieuPage> {
     final lieu = Lieu(
       nom: _nomController.text.trim(),
       description: _descriptionController.text.trim(),
-      adresse: GeoPoint(
-        double.parse(_latitudeController.text.trim().replaceAll(',', '.')),
-        double.parse(_longitudeController.text.trim().replaceAll(',', '.')),
+      latitude: double.parse(
+        _latitudeController.text.trim().replaceAll(',', '.'),
+      ),
+      longitude: double.parse(
+        _longitudeController.text.trim().replaceAll(',', '.'),
       ),
       categorie: _selectedCategory.value,
       horaireOuverture: _horaireController.text.trim(),
@@ -250,7 +251,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
     );
 
     try {
-      await _source.create(lieu);
+      await _source.save(lieu);
       _isSubmitting.value = false;
       messenger.showSnackBar(
         const SnackBar(content: Text('Lieu ajouté avec succès.')),

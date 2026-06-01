@@ -9,6 +9,8 @@ import 'profil/profile_review.dart';
 import 'profil/profile_section.dart';
 import 'profil/review_card.dart';
 import 'profil/settings_card.dart';
+import '../data/sources/auth_source.dart';
+import '../data/sources/auth_supabase_source.dart';
 
 /// Profile screen with user details, favorite places, reviews, and settings.
 class ProfilPage extends StatelessWidget {
@@ -50,8 +52,12 @@ class ProfilPage extends StatelessWidget {
     ),
   ];
 
+  /// Auth backend (injected for testing).
+  final AuthSource authSource;
+
   /// Creates the profile page.
-  const ProfilPage({super.key});
+  ProfilPage({super.key, AuthSource? authSource})
+    : authSource = authSource ?? AuthSupabaseSource();
 
   @override
   Widget build(BuildContext context) {
@@ -105,9 +111,9 @@ class ProfilPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    const ProfileSection(
+                    ProfileSection(
                       title: 'Paramètres',
-                      child: SettingsCard(),
+                      child: SettingsCard(onLogout: authSource.signOut),
                     ),
                   ],
                 ),

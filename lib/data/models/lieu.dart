@@ -1,6 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
-import '../../core/utils/firestore_data_converter.dart';
+import '../../core/utils/supabase_data_converter.dart';
 
 /// Place category used by Firestore and feed filters.
 enum LieuCategorie {
@@ -21,7 +19,7 @@ enum LieuCategorie {
 
   /// Builds a category from Firestore data.
   static LieuCategorie fromValue(Object? value) {
-    final normalized = FirestoreDataConverter.toStringValue(value)
+    final normalized = SupabaseDataConverter.toStringValue(value)
         .trim()
         .toLowerCase()
         .replaceAll(String.fromCharCode(0x00e9), 'e')
@@ -54,12 +52,13 @@ enum LieuCategorie {
   }
 }
 
-/// Campus place ready for Firestore reads and writes.
+/// Campus place ready for Supabase reads and writes.
 class Lieu {
   final String id;
   final String nom;
   final String description;
-  final GeoPoint adresse;
+  final double latitude;
+  final double longitude;
   final String horaireOuverture;
   final String imageUrl;
   final LieuCategorie categorie;
@@ -69,7 +68,8 @@ class Lieu {
     this.id = '',
     required this.nom,
     required this.description,
-    this.adresse = const GeoPoint(0, 0),
+    this.latitude = 0,
+    this.longitude = 0,
     this.categorie = LieuCategorie.services,
     String? horaireOuverture,
     String? heures,
@@ -78,40 +78,38 @@ class Lieu {
   }) : horaireOuverture = horaireOuverture ?? heures ?? '',
        imageUrl = imageUrl ?? photo ?? '';
 
-  /// Creates a place from Firestore data.
+  /// Creates a place from a Supabase row.
   factory Lieu.fromMap(Map<String, dynamic> map) {
     return Lieu(
-      id: FirestoreDataConverter.toStringValue(map['idLieu']),
-      nom: FirestoreDataConverter.toStringValue(map['nom']),
-      description: FirestoreDataConverter.toStringValue(map['description']),
-      adresse: FirestoreDataConverter.toGeoPoint(
-        map['adresse'],
-        fallbackLatitude: FirestoreDataConverter.toDouble(map['latitude']),
-        fallbackLongitude: FirestoreDataConverter.toDouble(map['longitude']),
-      ),
-      horaireOuverture: FirestoreDataConverter.toHoraire(
+      id: SupabaseDataConverter.toStringValue(map['id'] ?? map['idLieu']),
+      nom: SupabaseDataConverter.toStringValue(map['nom']),
+      description: SupabaseDataConverter.toStringValue(map['description']),
+      latitude: SupabaseDataConverter.toDouble(map['latitude'] ?? map['lat']),
+      longitude: SupabaseDataConverter.toDouble(map['longitude'] ?? map['lng']),
+      horaireOuverture: SupabaseDataConverter.toHoraire(
         map['horaire'] ??
             map['horaires'] ??
             map['horaireOuverture'] ??
             map['heures'] ??
             map['openingHours'],
       ),
-      imageUrl: FirestoreDataConverter.toStringValue(
-        map['photo'] ?? map['imageUrl'],
+      imageUrl: SupabaseDataConverter.toStringValue(
+        map['image_url'] ?? map['photo'] ?? map['imageUrl'],
       ),
       categorie: LieuCategorie.fromValue(map['categorie']),
     );
   }
 
-  /// Converts this place to Firestore data.
+  /// Converts this place to a Supabase row.
   Map<String, dynamic> toMap() {
     return {
-      'idLieu': id,
+      'id': id,
       'nom': nom,
       'description': description,
-      'adresse': adresse,
+      'latitude': latitude,
+      'longitude': longitude,
       'horaire': horaireOuverture,
-      'imageUrl': imageUrl,
+      'image_url': imageUrl,
       'categorie': categorie.value,
     };
   }
@@ -121,7 +119,8 @@ class Lieu {
     String? id,
     String? nom,
     String? description,
-    GeoPoint? adresse,
+    double? latitude,
+    double? longitude,
     String? horaireOuverture,
     String? imageUrl,
     LieuCategorie? categorie,
@@ -130,7 +129,8 @@ class Lieu {
       id: id ?? this.id,
       nom: nom ?? this.nom,
       description: description ?? this.description,
-      adresse: adresse ?? this.adresse,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
       horaireOuverture: horaireOuverture ?? this.horaireOuverture,
       imageUrl: imageUrl ?? this.imageUrl,
       categorie: categorie ?? this.categorie,
@@ -141,7 +141,7 @@ class Lieu {
   String get heures => horaireOuverture;
 
   /// Whether the place is currently open.
-  bool get isOpen => FirestoreDataConverter.isOpenFromHoraire(
+  bool get isOpen => SupabaseDataConverter.isOpenFromHoraire(
     currentTimestamp: DateTime.now(),
     heures: horaireOuverture,
   );
