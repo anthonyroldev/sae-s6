@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
+import '../core/utils/app_firebase.dart';
 import '../data/models/lieu.dart';
 import '../data/sources/lieu_firestore_source.dart';
+import 'add_lieu_page.dart';
 import 'feed/home_header.dart';
 import 'feed/place_card.dart';
 import 'feed/search_header_delegate.dart';
@@ -20,7 +22,9 @@ class FeedPage extends StatefulWidget {
 }
 
 class _FeedPageState extends State<FeedPage> {
-  final _lieuSource = LieuFirestoreSource();
+  final LieuFirestoreSource? _lieuSource = AppFirebase.isEnabled
+      ? LieuFirestoreSource()
+      : null;
   final _searchController = TextEditingController();
   final _searchQuery = ValueNotifier<String>('');
   final _selectedCategory = ValueNotifier<LieuCategorie>(LieuCategorie.all);
@@ -37,10 +41,17 @@ class _FeedPageState extends State<FeedPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      floatingActionButton: FloatingActionButton(
+        onPressed: _openAddLieuPage,
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.surface,
+        tooltip: 'Ajouter un lieu',
+        child: const Icon(Icons.add),
+      ),
       body: SafeArea(
         bottom: false,
         child: StreamBuilder<List<Lieu>>(
-          stream: _lieuSource.watchAll(),
+          stream: _lieuSource?.watchAll(),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               debugPrint('Feed Firestore error: ${snapshot.error}');
@@ -71,6 +82,28 @@ class _FeedPageState extends State<FeedPage> {
   }
 
   List<Widget> _buildContentSlivers(AsyncSnapshot<List<Lieu>> snapshot) {
+    if (_lieuSource == null) {
+      return const [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.all(AppSpacing.md),
+              child: Text(
+                'Firebase n’est pas configuré pour cette plateforme.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppColors.secondaryText,
+                  fontSize: 16,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ];
+    }
+
     if (snapshot.connectionState == ConnectionState.waiting) {
       return const [
         SliverFillRemaining(
@@ -158,5 +191,11 @@ class _FeedPageState extends State<FeedPage> {
 
   bool _matchesFilter(Lieu place, LieuCategorie filter) {
     return filter == LieuCategorie.all || place.categorie == filter;
+  }
+
+  void _openAddLieuPage() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const AddLieuPage()));
   }
 }
