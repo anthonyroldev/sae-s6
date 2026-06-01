@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
@@ -50,6 +51,11 @@ class _LoginCodePageState extends State<LoginCodePage> {
       // The AuthGate stream now renders HomePage at the root route; drop the
       // pushed login routes so the user lands on it instead of this page.
       Navigator.of(context).popUntil((route) => route.isFirst);
+    } on AuthException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _error = error.message);
     } on Object {
       if (!mounted) {
         return;
@@ -69,6 +75,11 @@ class _LoginCodePageState extends State<LoginCodePage> {
     });
     try {
       await widget.authSource.sendCode(widget.email);
+    } on AuthException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _error = error.message);
     } on Object {
       if (!mounted) {
         return;
@@ -101,15 +112,18 @@ class _LoginCodePageState extends State<LoginCodePage> {
                 key: const Key('code-field'),
                 controller: _codeController,
                 keyboardType: TextInputType.number,
-                maxLength: 6,
+                maxLength: 8,
                 decoration: const InputDecoration(
-                  labelText: 'Code à 6 chiffres',
+                  labelText: 'Code à 8 chiffres',
                   border: OutlineInputBorder(),
                 ),
               ),
               if (_error != null) ...[
                 const SizedBox(height: AppSpacing.sm),
-                Text(_error!, style: const TextStyle(color: AppColors.errorText)),
+                Text(
+                  _error!,
+                  style: const TextStyle(color: AppColors.errorText),
+                ),
               ],
               const SizedBox(height: AppSpacing.lg),
               ElevatedButton(

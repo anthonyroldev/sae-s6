@@ -91,7 +91,10 @@ class _LoginEmailPageState extends State<LoginEmailPage> {
               ),
               if (_error != null) ...[
                 const SizedBox(height: AppSpacing.sm),
-                Text(_error!, style: const TextStyle(color: AppColors.errorText)),
+                Text(
+                  _error!,
+                  style: const TextStyle(color: AppColors.errorText),
+                ),
               ],
               const SizedBox(height: AppSpacing.lg),
               ElevatedButton(

@@ -18,15 +18,15 @@ class AuthSupabaseSource implements AuthSource {
   }
 
   @override
-  Future<void> verifyCode({
-    required String email,
-    required String code,
-  }) async {
+  Future<void> verifyCode({required String email, required String code}) async {
     final response = await _client.auth.verifyOTP(
       type: OtpType.email,
       token: code,
       email: email,
     );
+    if (response.session == null) {
+      throw const AuthException('Aucune session créée');
+    }
     final user = response.user;
     if (user != null) {
       await _client.from(_usersTable).upsert({
