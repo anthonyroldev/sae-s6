@@ -118,7 +118,7 @@ class Lieu {
 
   /// Creates a copy of this place with selected values replaced.
   Lieu copyWith({
-    int? id,
+    String? id,
     String? nom,
     String? description,
     GeoPoint? adresse,

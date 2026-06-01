@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
-import '../core/utils/app_firebase.dart';
 import '../data/models/lieu.dart';
 import '../data/sources/lieu_firestore_source.dart';
 import 'add_lieu_page.dart';
@@ -22,9 +21,7 @@ class FeedPage extends StatefulWidget {
 }
 
 class _FeedPageState extends State<FeedPage> {
-  final LieuFirestoreSource? _lieuSource = AppFirebase.isEnabled
-      ? LieuFirestoreSource()
-      : null;
+  final _lieuSource = LieuFirestoreSource();
   final _searchController = TextEditingController();
   final _searchQuery = ValueNotifier<String>('');
   final _selectedCategory = ValueNotifier<LieuCategorie>(LieuCategorie.all);
@@ -51,7 +48,7 @@ class _FeedPageState extends State<FeedPage> {
       body: SafeArea(
         bottom: false,
         child: StreamBuilder<List<Lieu>>(
-          stream: _lieuSource?.watchAll(),
+          stream: _lieuSource.watchAll(),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               debugPrint('Feed Firestore error: ${snapshot.error}');
@@ -82,28 +79,6 @@ class _FeedPageState extends State<FeedPage> {
   }
 
   List<Widget> _buildContentSlivers(AsyncSnapshot<List<Lieu>> snapshot) {
-    if (_lieuSource == null) {
-      return const [
-        SliverFillRemaining(
-          hasScrollBody: false,
-          child: Center(
-            child: Padding(
-              padding: EdgeInsets.all(AppSpacing.md),
-              child: Text(
-                'Firebase n’est pas configuré pour cette plateforme.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: AppColors.secondaryText,
-                  fontSize: 16,
-                  height: 1.4,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ];
-    }
-
     if (snapshot.connectionState == ConnectionState.waiting) {
       return const [
         SliverFillRemaining(

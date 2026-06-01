@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
-import '../core/utils/app_firebase.dart';
 import '../data/models/lieu.dart';
 import '../data/sources/lieu_firestore_source.dart';
 
@@ -18,9 +17,7 @@ class AddLieuPage extends StatefulWidget {
 
 class _AddLieuPageState extends State<AddLieuPage> {
   final _formKey = GlobalKey<FormState>();
-  final LieuFirestoreSource? _source = AppFirebase.isEnabled
-      ? LieuFirestoreSource()
-      : null;
+  final _source = LieuFirestoreSource();
   final _nomController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _latitudeController = TextEditingController();
@@ -232,15 +229,6 @@ class _AddLieuPageState extends State<AddLieuPage> {
   }
 
   Future<void> _submit() async {
-    if (_source == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Firebase n’est pas configuré pour cette plateforme.'),
-        ),
-      );
-      return;
-    }
-
     final formState = _formKey.currentState;
     if (formState == null || !formState.validate()) {
       return;
