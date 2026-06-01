@@ -1,7 +1,5 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:le_repere/core/constants/app_colors.dart';
-import 'package:le_repere/firebase_options.dart';
 import 'package:le_repere/pages/splash_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -13,10 +11,7 @@ const String _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 /// `--dart-define=SUPABASE_ANON_KEY=...`.
 const String _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
-/// App entry point.
-///
-/// Authentication stays on Firebase, while application data is served by
-/// Supabase. Both back ends are initialized here before the app starts.
+/// App entry point. The app uses Supabase for both auth and data.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -26,7 +21,6 @@ void main() async {
     '--dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...',
   );
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await Supabase.initialize(url: _supabaseUrl, anonKey: _supabaseAnonKey);
 
   runApp(const MainApp());
