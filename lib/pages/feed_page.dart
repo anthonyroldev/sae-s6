@@ -9,7 +9,6 @@ import 'feed/home_header.dart';
 import 'feed/place_card.dart';
 import 'feed/search_header_delegate.dart';
 
-/// Home feed showing available campus places.
 class FeedPage extends StatefulWidget {
   static const _filters = LieuCategorie.values;
 
