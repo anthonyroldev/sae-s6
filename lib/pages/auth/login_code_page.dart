@@ -44,7 +44,12 @@ class _LoginCodePageState extends State<LoginCodePage> {
     });
     try {
       await widget.authSource.verifyCode(email: widget.email, code: code);
-      // On success the AuthGate stream routes to HomePage; nothing else to do.
+      if (!mounted) {
+        return;
+      }
+      // The AuthGate stream now renders HomePage at the root route; drop the
+      // pushed login routes so the user lands on it instead of this page.
+      Navigator.of(context).popUntil((route) => route.isFirst);
     } on Object {
       if (!mounted) {
         return;
