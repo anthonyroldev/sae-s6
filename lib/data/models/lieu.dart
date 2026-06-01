@@ -116,8 +116,31 @@ class Lieu {
     };
   }
 
+  /// Creates a copy of this place with selected values replaced.
+  Lieu copyWith({
+    String? id,
+    String? nom,
+    String? description,
+    GeoPoint? adresse,
+    String? horaireOuverture,
+    String? imageUrl,
+    LieuCategorie? categorie,
+  }) {
+    return Lieu(
+      id: id ?? this.id,
+      nom: nom ?? this.nom,
+      description: description ?? this.description,
+      adresse: adresse ?? this.adresse,
+      horaireOuverture: horaireOuverture ?? this.horaireOuverture,
+      imageUrl: imageUrl ?? this.imageUrl,
+      categorie: categorie ?? this.categorie,
+    );
+  }
+
+  /// Opening hours alias used by place cards.
   String get heures => horaireOuverture;
 
+  /// Whether the place is currently open.
   bool get isOpen => FirestoreDataConverter.isOpenFromHoraire(
     currentTimestamp: DateTime.now(),
     heures: horaireOuverture,

@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -63,8 +60,18 @@ class DefaultFirebaseOptions {
     messagingSenderId: '527389437123',
     projectId: 'le-repere-1b000',
     storageBucket: 'le-repere-1b000.firebasestorage.app',
+    androidClientId: '527389437123-2vn4t6rje3vrgqg9blb6jv6vepfv7jpa.apps.googleusercontent.com',
     iosClientId: '527389437123-70j9vqtv8cln1cv47jh706fev0v6obr6.apps.googleusercontent.com',
     iosBundleId: 'fr.insa.hdf.leRepere',
+  );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyCENY1jjoNs-7vGnoyeVoNyVb_PAMmv5IE',
+    appId: '1:527389437123:web:f64d2715b9a5c36ea34676',
+    messagingSenderId: '527389437123',
+    projectId: 'le-repere-1b000',
+    authDomain: 'le-repere-1b000.firebaseapp.com',
+    storageBucket: 'le-repere-1b000.firebasestorage.app',
   );
 
 }

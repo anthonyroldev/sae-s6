@@ -13,7 +13,8 @@
           "projectId": "le-repere-1b000",
           "configurations": {
             "android": "1:527389437123:android:44abfb3da476689ba34676",
-            "ios": "1:527389437123:ios:813945c1e90e546fa34676"
+            "ios": "1:527389437123:ios:813945c1e90e546fa34676",
+            "web": "1:527389437123:web:f64d2715b9a5c36ea34676"
           }
         }
       }

@@ -4,6 +4,7 @@ import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
 import '../data/models/lieu.dart';
 import '../data/sources/lieu_firestore_source.dart';
+import 'add_lieu_page.dart';
 import 'feed/home_header.dart';
 import 'feed/place_card.dart';
 import 'feed/search_header_delegate.dart';
@@ -37,6 +38,13 @@ class _FeedPageState extends State<FeedPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      floatingActionButton: FloatingActionButton(
+        onPressed: _openAddLieuPage,
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.surface,
+        tooltip: 'Ajouter un lieu',
+        child: const Icon(Icons.add),
+      ),
       body: SafeArea(
         bottom: false,
         child: StreamBuilder<List<Lieu>>(
@@ -158,5 +166,11 @@ class _FeedPageState extends State<FeedPage> {
 
   bool _matchesFilter(Lieu place, LieuCategorie filter) {
     return filter == LieuCategorie.all || place.categorie == filter;
+  }
+
+  void _openAddLieuPage() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const AddLieuPage()));
   }
 }
