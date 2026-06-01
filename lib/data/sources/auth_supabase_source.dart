@@ -13,12 +13,22 @@ class AuthSupabaseSource implements AuthSource {
     : _client = client ?? Supabase.instance.client;
 
   @override
-  Future<void> sendCode(String email) {
-    return _client.auth.signInWithOtp(email: email, shouldCreateUser: true);
+  Future<void> sendCode({
+    required String email,
+    required bool shouldCreateUser,
+  }) {
+    return _client.auth.signInWithOtp(
+      email: email,
+      shouldCreateUser: shouldCreateUser,
+    );
   }
 
   @override
-  Future<void> verifyCode({required String email, required String code}) async {
+  Future<void> verifyCode({
+    required String email,
+    required String code,
+    String? name,
+  }) async {
     final response = await _client.auth.verifyOTP(
       type: OtpType.email,
       token: code,
@@ -29,9 +39,16 @@ class AuthSupabaseSource implements AuthSource {
     }
     final user = response.user;
     if (user != null) {
+      final existingProfile = await _client
+          .from(_usersTable)
+          .select('nom')
+          .eq('id', user.id)
+          .maybeSingle();
+      final existingName = existingProfile?['nom']?.toString() ?? '';
       await _client.from(_usersTable).upsert({
         'id': user.id,
         'email': user.email ?? email,
+        'nom': name?.trim().isNotEmpty == true ? name!.trim() : existingName,
       }, onConflict: 'id');
     }
   }

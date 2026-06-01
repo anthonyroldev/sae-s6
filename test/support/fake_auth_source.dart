@@ -4,11 +4,11 @@ import 'package:le_repere/data/sources/auth_source.dart';
 
 /// In-memory [AuthSource] for widget tests.
 class FakeAuthSource implements AuthSource {
-  /// Emails passed to [sendCode], in order.
-  final List<String> sentCodes = [];
+  /// OTP requests passed to [sendCode], in order.
+  final List<({String email, bool shouldCreateUser})> sentCodes = [];
 
-  /// (email, code) pairs passed to [verifyCode], in order.
-  final List<({String email, String code})> verifiedCodes = [];
+  /// OTP verification requests, in order.
+  final List<({String email, String code, String? name})> verifiedCodes = [];
 
   /// Number of times [signOut] was called.
   int signOutCount = 0;
@@ -23,21 +23,28 @@ class FakeAuthSource implements AuthSource {
   final StreamController<bool> _controller = StreamController<bool>.broadcast();
 
   @override
-  Future<void> sendCode(String email) async {
+  Future<void> sendCode({
+    required String email,
+    required bool shouldCreateUser,
+  }) async {
     final error = throwOnSend;
     if (error != null) {
       throw error;
     }
-    sentCodes.add(email);
+    sentCodes.add((email: email, shouldCreateUser: shouldCreateUser));
   }
 
   @override
-  Future<void> verifyCode({required String email, required String code}) async {
+  Future<void> verifyCode({
+    required String email,
+    required String code,
+    String? name,
+  }) async {
     final error = throwOnVerify;
     if (error != null) {
       throw error;
     }
-    verifiedCodes.add((email: email, code: code));
+    verifiedCodes.add((email: email, code: code, name: name));
     _signedIn = true;
     _controller.add(true);
   }

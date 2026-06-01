@@ -1,89 +1,71 @@
-# Le Repere
+# Le Repère
 
-Flutter app for discovering places on Valenciennes for students.
-It uses Firebase for data storage and authentication.
+Flutter app for discovering student places in Valenciennes.
 
 ## Prerequisites
 
 - Flutter SDK stable
 - Android Studio or Xcode for mobile targets
-- 
-Check install:
+- Supabase project
 
 ```bash
 flutter --version
 flutter doctor
-```
-
-## Init
-
-From repo root:
-
-```bash
 flutter pub get
 ```
 
-Firebase config files are already present:
+## Supabase
 
-- `lib/firebase_options.dart`
-- `android/app/google-services.json`
+Run migrations:
+
+```bash
+supabase db push
+```
+
+The signup domain restriction uses a `before-user-created` SQL Auth Hook.
+
+For the hosted project:
+
+1. Open Supabase Dashboard.
+2. Go to `Authentication` → `Hooks`.
+3. Enable `Before User Created`.
+4. Select `Postgres`.
+5. Select `public.hook_restrict_signup_by_email_domain`.
+
+Allowed signup domains:
+
+- `insa-hdf.fr`
+- `uphf.fr`
+- `univ-lille.fr`
+- their subdomains
 
 ## Launch
 
-List available devices:
-
 ```bash
-flutter devices
+flutter run \
+  --dart-define=SUPABASE_URL=https://<project-ref>.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=<publishable-or-anon-key>
 ```
 
-Run on connected device or emulator:
+Chrome fallback:
 
 ```bash
-flutter run
-```
-
-Run on Chrome:
-
-```bash
-flutter run -d chrome
-```
-
-Run on a specific device:
-
-```bash
-flutter run -d <device-id>
+flutter run -d chrome \
+  --dart-define=SUPABASE_URL=https://<project-ref>.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=<publishable-or-anon-key>
 ```
 
 ## Quality Checks
 
-Format:
-
 ```bash
 dart format lib/ test/
-```
-
-Analyze:
-
-```bash
 flutter analyze
-```
-
-Test:
-
-```bash
 flutter test
 ```
 
 ## Debug Builds
 
-Android:
-
 ```bash
 flutter build apk --debug
-```
-
-iOS without signing:
-
-```bash
 flutter build ios --debug --no-codesign
 ```
