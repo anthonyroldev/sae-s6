@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:le_repere/data/sources/lieu_supabase_source.dart';
 
 import '../core/constants/app_colors.dart';
 import '../data/models/lieu.dart';
-import '../data/sources/lieu_firestore_source.dart';
 
 /// Campus map page.
 class MapPage extends StatefulWidget {
@@ -17,7 +17,7 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   static const LatLng _campusCenter = LatLng(50.3559, 3.5182);
-  final _lieuSource = LieuFirestoreSource();
+  final _lieuSource = LieuSupabaseSource();
   late final Stream<List<Lieu>> _lieuxStream;
 
   @override
@@ -79,12 +79,15 @@ class _MapPageState extends State<MapPage> {
   }
 
   bool _hasValidCoordinates(Lieu place) {
-    return place.adresse.latitude != 0 || place.adresse.longitude != 0;
+    return place.latitude != 0 || place.longitude != 0;
   }
 
   Marker _buildMarker(Lieu place) {
     return Marker(
-      point: LatLng(place.adresse.latitude, place.adresse.longitude),
+      point: LatLng(
+        place.latitude != 0 ? place.latitude : 0,
+        place.longitude != 0 ? place.longitude : 0,
+      ),
       width: 96,
       height: 64,
       child: Column(
