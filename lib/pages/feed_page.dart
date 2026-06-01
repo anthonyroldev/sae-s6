@@ -8,7 +8,6 @@ import 'add_lieu_page.dart';
 import 'feed/home_header.dart';
 import 'feed/place_card.dart';
 import 'feed/search_header_delegate.dart';
-import 'lieux_data.dart';
 
 class FeedPage extends StatefulWidget {
   static const _filters = LieuCategorie.values;
