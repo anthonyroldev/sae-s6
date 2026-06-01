@@ -32,7 +32,7 @@ class AuthSupabaseSource implements AuthSource {
       await _client.from(_usersTable).upsert({
         'id': user.id,
         'email': user.email ?? email,
-      });
+      }, onConflict: 'id');
     }
   }
 

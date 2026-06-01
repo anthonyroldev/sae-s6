@@ -40,4 +40,19 @@ void main() {
     expect(auth.sentCodes, isEmpty);
     expect(find.text('Email invalide'), findsOneWidget);
   });
+
+  testWidgets('shows an error when sending the code fails', (tester) async {
+    final auth = FakeAuthSource()..throwOnSend = Exception('network');
+    addTearDown(auth.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(home: LoginEmailPage(authSource: auth)),
+    );
+
+    await tester.enterText(find.byKey(const Key('email-field')), 'a@b.com');
+    await tester.tap(find.byKey(const Key('send-code-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.text("Échec de l'envoi du code"), findsOneWidget);
+  });
 }

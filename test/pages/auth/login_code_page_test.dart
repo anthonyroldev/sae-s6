@@ -38,4 +38,20 @@ void main() {
 
     expect(find.text('Code incorrect ou expiré'), findsOneWidget);
   });
+
+  testWidgets('resends the code', (tester) async {
+    final auth = FakeAuthSource();
+    addTearDown(auth.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LoginCodePage(email: 'a@b.com', authSource: auth),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('resend-code-button')));
+    await tester.pumpAndSettle();
+
+    expect(auth.sentCodes, ['a@b.com']);
+  });
 }

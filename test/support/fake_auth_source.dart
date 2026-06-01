@@ -13,6 +13,9 @@ class FakeAuthSource implements AuthSource {
   /// Number of times [signOut] was called.
   int signOutCount = 0;
 
+  /// When set, [sendCode] throws this instead of succeeding.
+  Object? throwOnSend;
+
   /// When set, [verifyCode] throws this instead of succeeding.
   Object? throwOnVerify;
 
@@ -20,7 +23,13 @@ class FakeAuthSource implements AuthSource {
   final StreamController<bool> _controller = StreamController<bool>.broadcast();
 
   @override
-  Future<void> sendCode(String email) async => sentCodes.add(email);
+  Future<void> sendCode(String email) async {
+    final error = throwOnSend;
+    if (error != null) {
+      throw error;
+    }
+    sentCodes.add(email);
+  }
 
   @override
   Future<void> verifyCode({required String email, required String code}) async {

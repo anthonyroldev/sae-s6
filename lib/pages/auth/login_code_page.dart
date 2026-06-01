@@ -57,7 +57,24 @@ class _LoginCodePageState extends State<LoginCodePage> {
     }
   }
 
-  Future<void> _resend() => widget.authSource.sendCode(widget.email);
+  Future<void> _resend() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      await widget.authSource.sendCode(widget.email);
+    } on Object {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _error = "Échec de l'envoi du code");
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
