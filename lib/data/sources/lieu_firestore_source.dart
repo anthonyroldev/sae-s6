@@ -34,4 +34,11 @@ class LieuFirestoreSource {
   Future<void> save(Lieu lieu) {
     return _places.doc(lieu.id).set(lieu);
   }
+
+  /// Creates a new campus place with the next available numeric identifier.
+  Future<void> create(Lieu lieu) {
+    final id = DateTime.now().millisecondsSinceEpoch;
+    final placeToCreate = lieu.copyWith(id: id);
+    return _places.doc(id.toString()).set(placeToCreate);
+  }
 }
