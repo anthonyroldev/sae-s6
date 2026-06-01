@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'home_page.dart';
+import 'auth/auth_gate.dart';
 
 /// Splash page shown at app startup.
 class SplashPage extends StatefulWidget {
@@ -35,7 +35,7 @@ class _SplashPageState extends State<SplashPage> {
         setState(() => _isVisible = true);
       }
     });
-    _timer = Timer(_displayDuration, _openHomePage);
+    _timer = Timer(_displayDuration, _openAuthGate);
   }
 
   @override
@@ -44,13 +44,13 @@ class _SplashPageState extends State<SplashPage> {
     super.dispose();
   }
 
-  void _openHomePage() {
+  void _openAuthGate() {
     if (!mounted) {
       return;
     }
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const HomePage()),
+      MaterialPageRoute<void>(builder: (_) => AuthGate()),
     );
   }
 
