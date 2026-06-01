@@ -2,8 +2,8 @@ import '../../core/utils/firestore_data_converter.dart';
 
 /// App user ready for Supabase reads and writes.
 ///
-/// The primary key [id] is the Firebase Auth UID, which links the Supabase
-/// row to the authenticated user.
+/// The primary key [id] is the Supabase Auth user id (`auth.uid()`), which
+/// links the row to the authenticated user.
 class Utilisateur {
   final String id;
   final String nom;

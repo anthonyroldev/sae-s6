@@ -4,8 +4,8 @@ import '../models/utilisateur.dart';
 
 /// Supabase source for app users.
 ///
-/// Users are keyed by their Firebase Auth UID, which links each Supabase row
-/// to the authenticated account.
+/// Users are keyed by their Supabase Auth user id (`auth.uid()`), which links
+/// each row to the authenticated account.
 class UtilisateurSupabaseSource {
   static const _table = 'utilisateurs';
 
