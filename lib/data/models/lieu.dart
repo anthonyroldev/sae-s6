@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 import '../../core/utils/firestore_data_converter.dart';
 
 /// Place category used by Firestore and feed filters.
@@ -54,12 +52,13 @@ enum LieuCategorie {
   }
 }
 
-/// Campus place ready for Firestore reads and writes.
+/// Campus place ready for Supabase reads and writes.
 class Lieu {
   final String id;
   final String nom;
   final String description;
-  final GeoPoint adresse;
+  final double latitude;
+  final double longitude;
   final String horaireOuverture;
   final String imageUrl;
   final LieuCategorie categorie;
@@ -69,7 +68,8 @@ class Lieu {
     this.id = '',
     required this.nom,
     required this.description,
-    this.adresse = const GeoPoint(0, 0),
+    this.latitude = 0,
+    this.longitude = 0,
     this.categorie = LieuCategorie.services,
     String? horaireOuverture,
     String? heures,
@@ -78,16 +78,15 @@ class Lieu {
   }) : horaireOuverture = horaireOuverture ?? heures ?? '',
        imageUrl = imageUrl ?? photo ?? '';
 
-  /// Creates a place from Firestore data.
+  /// Creates a place from a Supabase row.
   factory Lieu.fromMap(Map<String, dynamic> map) {
     return Lieu(
-      id: FirestoreDataConverter.toStringValue(map['idLieu']),
+      id: FirestoreDataConverter.toStringValue(map['id'] ?? map['idLieu']),
       nom: FirestoreDataConverter.toStringValue(map['nom']),
       description: FirestoreDataConverter.toStringValue(map['description']),
-      adresse: FirestoreDataConverter.toGeoPoint(
-        map['adresse'],
-        fallbackLatitude: FirestoreDataConverter.toDouble(map['latitude']),
-        fallbackLongitude: FirestoreDataConverter.toDouble(map['longitude']),
+      latitude: FirestoreDataConverter.toDouble(map['latitude'] ?? map['lat']),
+      longitude: FirestoreDataConverter.toDouble(
+        map['longitude'] ?? map['lng'],
       ),
       horaireOuverture: FirestoreDataConverter.toHoraire(
         map['horaire'] ??
@@ -97,21 +96,22 @@ class Lieu {
             map['openingHours'],
       ),
       imageUrl: FirestoreDataConverter.toStringValue(
-        map['photo'] ?? map['imageUrl'],
+        map['image_url'] ?? map['photo'] ?? map['imageUrl'],
       ),
       categorie: LieuCategorie.fromValue(map['categorie']),
     );
   }
 
-  /// Converts this place to Firestore data.
+  /// Converts this place to a Supabase row.
   Map<String, dynamic> toMap() {
     return {
-      'idLieu': id,
+      'id': id,
       'nom': nom,
       'description': description,
-      'adresse': adresse,
+      'latitude': latitude,
+      'longitude': longitude,
       'horaire': horaireOuverture,
-      'imageUrl': imageUrl,
+      'image_url': imageUrl,
       'categorie': categorie.value,
     };
   }

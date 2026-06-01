@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
 import '../data/models/lieu.dart';
-import '../data/sources/lieu_firestore_source.dart';
+import '../data/sources/lieu_supabase_source.dart';
 import 'add_lieu_page.dart';
 import 'feed/home_header.dart';
 import 'feed/place_card.dart';
@@ -20,7 +20,7 @@ class FeedPage extends StatefulWidget {
 }
 
 class _FeedPageState extends State<FeedPage> {
-  final _lieuSource = LieuFirestoreSource();
+  final _lieuSource = LieuSupabaseSource();
   final _searchController = TextEditingController();
   final _searchQuery = ValueNotifier<String>('');
   final _selectedCategory = ValueNotifier<LieuCategorie>(LieuCategorie.all);

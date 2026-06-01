@@ -7,7 +7,6 @@ environment:
   sdk: ^3.11.4
 
 dependencies:
-  cloud_firestore: ^6.4.1
   firebase_auth: ^6.5.1
   firebase_core: ^4.9.0
   firebase_ui_auth: ^3.0.1
@@ -15,8 +14,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_svg: 2.2.3
-  flutter_map: ^7.0.2
-  latlong2: ^0.9.1
+  supabase_flutter: ^2.12.4
 
 dev_dependencies:
   flutter_test:
