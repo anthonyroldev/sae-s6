@@ -15,7 +15,7 @@ class UtilisateurSupabaseSource {
   UtilisateurSupabaseSource({SupabaseClient? client})
     : _client = client ?? Supabase.instance.client;
 
-  /// Watches one user by identifier (Firebase UID).
+  /// Watches one user by identifier (Supabase Auth user id).
   Stream<Utilisateur?> watchById(String id) {
     return _client
         .from(_table)
@@ -24,7 +24,7 @@ class UtilisateurSupabaseSource {
         .map((rows) => rows.isEmpty ? null : Utilisateur.fromMap(rows.first));
   }
 
-  /// Fetches one user by identifier (Firebase UID).
+  /// Fetches one user by identifier (Supabase Auth user id).
   Future<Utilisateur?> getById(String id) async {
     final row = await _client.from(_table).select().eq('id', id).maybeSingle();
     return row == null ? null : Utilisateur.fromMap(row);
