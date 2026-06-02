@@ -51,6 +51,34 @@ Allowed signup domains:
 - `univ-lille.fr`
 - their subdomains
 
+## User roles
+
+Each account carries a role (`utilisateur`, `moderateur`, `association`, `admin`)
+stored on `utilisateurs.role`. A `custom-access-token` SQL Auth Hook injects it
+into the JWT as the `user_role` claim, read client-side by `RoleSource`.
+
+For the hosted project, enable the hook:
+
+1. Open Supabase Dashboard.
+2. Go to `Authentication` → `Hooks`.
+3. Enable `Customize Access Token (JWT) Claims`.
+4. Select `Postgres`.
+5. Select `public.custom_access_token_hook`.
+
+New accounts default to `utilisateur`. From the app, an admin promotes a user
+through the `set_user_role` RPC (it rejects non-admin callers).
+
+To bootstrap the first admin, run a direct update from the Dashboard SQL editor
+(postgres bypasses the column grants; the RPC's admin check does not apply to a
+plain `update`):
+
+```sql
+update public.utilisateurs set role = 'admin' where email = '<your-email>';
+```
+
+The promoted user must refresh their session (sign out/in) for the new
+`user_role` claim to appear in their JWT.
+
 ## Launch
 
 ```bash
