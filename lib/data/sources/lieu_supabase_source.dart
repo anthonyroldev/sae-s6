@@ -21,8 +21,21 @@ class LieuSupabaseSource {
         .map((rows) => rows.map(Lieu.fromMap).toList());
   }
 
-  /// Creates or updates a campus place.
+  /// Creates a campus place.
   Future<void> save(Lieu lieu) {
-    return _client.from(_table).upsert(lieu.toMap());
+    _validateLieu(lieu);
+    return _client.from(_table).insert(lieu.toMap());
+  }
+
+  void _validateLieu(Lieu lieu) {
+    if (lieu.nom.trim().isEmpty) {
+      throw ArgumentError.value(lieu.nom, 'nom');
+    }
+    if (lieu.latitude < -90 || lieu.latitude > 90) {
+      throw ArgumentError.value(lieu.latitude, 'latitude');
+    }
+    if (lieu.longitude < -180 || lieu.longitude > 180) {
+      throw ArgumentError.value(lieu.longitude, 'longitude');
+    }
   }
 }
