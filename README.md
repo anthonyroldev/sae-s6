@@ -22,6 +22,18 @@ Run migrations:
 supabase db push
 ```
 
+Load fake places locally:
+
+```bash
+supabase db reset
+```
+
+Load fake places on the hosted project:
+
+```bash
+supabase db push --include-seed
+```
+
 The signup domain restriction uses a `before-user-created` SQL Auth Hook.
 
 For the hosted project:
