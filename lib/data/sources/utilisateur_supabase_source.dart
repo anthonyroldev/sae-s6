@@ -1,12 +1,13 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/utilisateur.dart';
+import 'utilisateur_source.dart';
 
 /// Supabase source for app users.
 ///
 /// Users are keyed by their Supabase Auth user id (`auth.uid()`), which links
 /// each row to the authenticated account.
-class UtilisateurSupabaseSource {
+class UtilisateurSupabaseSource implements UtilisateurSource {
   static const _table = 'utilisateurs';
 
   final SupabaseClient _client;
@@ -14,6 +15,15 @@ class UtilisateurSupabaseSource {
   /// Creates a Supabase source for app users.
   UtilisateurSupabaseSource({SupabaseClient? client})
     : _client = client ?? Supabase.instance.client;
+
+  @override
+  Stream<Utilisateur?> watchCurrent() {
+    final id = _client.auth.currentUser?.id;
+    if (id == null) {
+      return Stream.value(null);
+    }
+    return watchById(id);
+  }
 
   /// Watches one user by identifier (Supabase Auth user id).
   Stream<Utilisateur?> watchById(String id) {
