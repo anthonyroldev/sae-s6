@@ -4,9 +4,8 @@ import 'package:geolocator/geolocator.dart';
 
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
-import '../core/utils/app_logger.dart';
 import '../data/models/lieu.dart';
-import '../data/sources/lieu_supabase_source.dart';
+import '../data/sources/lieu_firestore_source.dart';
 
 /// Page used to suggest and create a new campus place.
 class AddLieuPage extends StatefulWidget {
@@ -19,7 +18,7 @@ class AddLieuPage extends StatefulWidget {
 
 class _AddLieuPageState extends State<AddLieuPage> {
   final _formKey = GlobalKey<FormState>();
-  final _source = LieuSupabaseSource();
+  final _source = LieuFirestoreSource();
   final _nomController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _latitudeController = TextEditingController();
@@ -251,9 +250,6 @@ class _AddLieuPageState extends State<AddLieuPage> {
 
   String? _requiredValidator(String? value) {
     if (value == null || value.trim().isEmpty) {
-      AppLogger.warning(
-        'Add place validation failed: required field is empty.',
-      );
       return 'Ce champ est obligatoire';
     }
     return null;
@@ -261,11 +257,9 @@ class _AddLieuPageState extends State<AddLieuPage> {
 
   String? _coordinateValidator(String? value) {
     if (value == null || value.trim().isEmpty) {
-      AppLogger.warning('Add place validation failed: coordinate is empty.');
       return 'Obligatoire';
     }
     if (double.tryParse(value.trim().replaceAll(',', '.')) == null) {
-      AppLogger.warning('Add place validation failed: invalid coordinate.');
       return 'Nombre invalide';
     }
     return null;
@@ -289,14 +283,8 @@ class _AddLieuPageState extends State<AddLieuPage> {
       }
 
       var permission = await Geolocator.checkPermission();
-      if (!mounted) {
-        return;
-      }
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        if (!mounted) {
-          return;
-        }
       }
 
       if (permission == LocationPermission.denied) {
@@ -322,36 +310,20 @@ class _AddLieuPageState extends State<AddLieuPage> {
           accuracy: LocationAccuracy.high,
         ),
       );
-      if (!mounted) {
-        return;
-      }
-
       _latitudeController.text = position.latitude.toStringAsFixed(6);
       _longitudeController.text = position.longitude.toStringAsFixed(6);
-    } on Object catch (error, stackTrace) {
-      if (!mounted) {
-        return;
-      }
-
-      AppLogger.error(
-        'Failed to retrieve current position.',
-        error: error,
-        stackTrace: stackTrace,
-      );
+    } on Object catch (error) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Impossible de récupérer la position.')),
+        SnackBar(content: Text('Impossible de récupérer la position : $error')),
       );
     } finally {
-      if (mounted) {
-        _isLocating.value = false;
-      }
+      _isLocating.value = false;
     }
   }
 
   Future<void> _submit() async {
     final formState = _formKey.currentState;
     if (formState == null || !formState.validate()) {
-      AppLogger.warning('Add place form submitted with invalid values.');
       return;
     }
 
@@ -361,11 +333,9 @@ class _AddLieuPageState extends State<AddLieuPage> {
     final lieu = Lieu(
       nom: _nomController.text.trim(),
       description: _descriptionController.text.trim(),
-      latitude: double.parse(
-        _latitudeController.text.trim().replaceAll(',', '.'),
-      ),
-      longitude: double.parse(
-        _longitudeController.text.trim().replaceAll(',', '.'),
+      adresse: GeoPoint(
+        double.parse(_latitudeController.text.trim().replaceAll(',', '.')),
+        double.parse(_longitudeController.text.trim().replaceAll(',', '.')),
       ),
       categorie: _selectedCategory.value,
       horaireOuverture: _horaireController.text.trim(),
@@ -374,29 +344,15 @@ class _AddLieuPageState extends State<AddLieuPage> {
 
     try {
       await _source.create(lieu);
-      if (!mounted) {
-        return;
-      }
-
       _isSubmitting.value = false;
-      AppLogger.info('Place added successfully: ${lieu.nom}.');
       messenger.showSnackBar(
         const SnackBar(content: Text('Lieu ajouté avec succès.')),
       );
       navigator.pop();
-    } on Object catch (error, stackTrace) {
-      if (!mounted) {
-        return;
-      }
-
+    } on Object catch (error) {
       _isSubmitting.value = false;
-      AppLogger.error(
-        'Failed to add place: ${lieu.nom}.',
-        error: error,
-        stackTrace: stackTrace,
-      );
       messenger.showSnackBar(
-        const SnackBar(content: Text('Impossible d’ajouter le lieu.')),
+        SnackBar(content: Text('Impossible d’ajouter le lieu : $error')),
       );
     }
   }
