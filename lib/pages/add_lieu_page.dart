@@ -4,7 +4,7 @@ import 'package:le_repere/data/sources/lieu_supabase_source.dart';
 
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
-import '../core/utils/app_logger.dart';
+import '../core/utils/logger.dart';
 import '../data/models/lieu.dart';
 
 /// Page used to suggest and create a new campus place.
@@ -250,9 +250,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
 
   String? _requiredValidator(String? value) {
     if (value == null || value.trim().isEmpty) {
-      AppLogger.warning(
-        'Add place validation failed: required field is empty.',
-      );
+      logger.w('Add place validation failed: required field is empty.');
       return 'Ce champ est obligatoire';
     }
     return null;
@@ -260,11 +258,11 @@ class _AddLieuPageState extends State<AddLieuPage> {
 
   String? _coordinateValidator(String? value) {
     if (value == null || value.trim().isEmpty) {
-      AppLogger.warning('Add place validation failed: coordinate is empty.');
+      logger.w('Add place validation failed: coordinate is empty.');
       return 'Obligatoire';
     }
     if (double.tryParse(value.trim().replaceAll(',', '.')) == null) {
-      AppLogger.warning('Add place validation failed: invalid coordinate.');
+      logger.w('Add place validation failed: invalid coordinate.');
       return 'Nombre invalide';
     }
     return null;
@@ -335,7 +333,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
         return;
       }
 
-      AppLogger.error(
+      logger.e(
         'Failed to retrieve current position.',
         error: error,
         stackTrace: stackTrace,
@@ -353,7 +351,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
   Future<void> _submit() async {
     final formState = _formKey.currentState;
     if (formState == null || !formState.validate()) {
-      AppLogger.warning('Add place form submitted with invalid values.');
+      logger.w('Add place form submitted with invalid values.');
       return;
     }
 
@@ -381,7 +379,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
       }
 
       _isSubmitting.value = false;
-      AppLogger.info('Place added successfully: ${lieu.nom}.');
+      logger.i('Place added successfully: ${lieu.nom}.');
       messenger.showSnackBar(
         const SnackBar(content: Text('Lieu ajouté avec succès.')),
       );
@@ -392,7 +390,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
       }
 
       _isSubmitting.value = false;
-      AppLogger.error(
+      logger.e(
         'Failed to add place: ${lieu.nom}.',
         error: error,
         stackTrace: stackTrace,

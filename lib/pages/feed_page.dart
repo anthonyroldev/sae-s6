@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
-import '../core/utils/app_logger.dart';
+import '../core/utils/logger.dart';
 import '../data/models/lieu.dart';
 import '../data/sources/lieu_supabase_source.dart';
 import 'add_lieu_page.dart';
@@ -51,7 +51,7 @@ class _FeedPageState extends State<FeedPage> {
           stream: _lieuSource.watchAll(),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
-              AppLogger.error(
+              logger.e(
                 'Failed to load feed places.',
                 error: snapshot.error,
                 stackTrace: snapshot.stackTrace,
