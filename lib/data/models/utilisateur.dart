@@ -1,4 +1,5 @@
 import '../../core/utils/supabase_data_converter.dart';
+import 'user_role.dart';
 
 /// App user ready for Supabase reads and writes.
 ///
@@ -10,12 +11,17 @@ class Utilisateur {
   final String email;
   final String positionGps;
 
+  /// Application role. Server-managed: read from the row but never written by
+  /// the client (see [toMap]).
+  final UserRole role;
+
   /// Creates an app user.
   const Utilisateur({
     required this.id,
     required this.nom,
     required this.email,
     required this.positionGps,
+    this.role = UserRole.utilisateur,
   });
 
   /// Creates a user from a Supabase row.
@@ -27,10 +33,15 @@ class Utilisateur {
       positionGps: SupabaseDataConverter.toStringValue(
         map['position_gps'] ?? map['positionGPS'] ?? map['positionGps'],
       ),
+      role: UserRole.fromValue(map['role']),
     );
   }
 
   /// Converts this user to a Supabase row.
+  ///
+  /// `role` is intentionally omitted: it is managed server-side and the client
+  /// has no write privilege on that column. Use the `set_user_role` RPC (admins
+  /// only) to change a role.
   Map<String, dynamic> toMap() {
     return {'id': id, 'nom': nom, 'email': email, 'position_gps': positionGps};
   }
