@@ -2,15 +2,19 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:le_repere/data/sources/lieu_supabase_source.dart';
 
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
 import '../core/utils/logger.dart';
 import '../data/models/lieu.dart';
+import '../data/models/proposition_lieu.dart';
+import '../data/sources/proposition_source.dart';
+import '../data/sources/proposition_supabase_source.dart';
 
-/// Page used to suggest and create a new campus place.
+/// Page used to suggest a new campus place.
+///
+/// Submissions go to the moderation queue (`propositions_lieu`); a place is
+/// only published once a moderator validates it.
 class AddLieuPage extends StatefulWidget {
   /// Initial latitude displayed in the GPS field.
   final double? initialLatitude;
@@ -21,13 +25,12 @@ class AddLieuPage extends StatefulWidget {
   /// Supabase source used to save the place.
   final LieuSupabaseSource? lieuSource;
 
+  /// Proposal backend (injected for testing).
+  final PropositionSource propositionSource;
+
   /// Creates the add place page.
-  const AddLieuPage({
-    super.key,
-    this.initialLatitude,
-    this.initialLongitude,
-    this.lieuSource,
-  });
+  AddLieuPage({super.key, PropositionSource? propositionSource})
+    : propositionSource = propositionSource ?? PropositionSupabaseSource();
 
   @override
   State<AddLieuPage> createState() => _AddLieuPageState();
@@ -258,7 +261,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
                             ),
                           )
                         : const Text(
-                            'Ajouter le lieu',
+                            'Proposer le lieu',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -445,7 +448,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
         return;
       }
 
-      final lieu = Lieu(
+      final proposition = PropositionLieu(
         nom: placeName,
         description: _descriptionController.text.trim(),
         latitude: double.parse(
@@ -460,15 +463,18 @@ class _AddLieuPageState extends State<AddLieuPage> {
         imageUrl: imageUrl,
       );
 
-      await source.save(lieu);
+    try {
+      await widget.propositionSource.soumettre(proposition);
       if (!mounted) {
         return;
       }
 
       _isSubmitting.value = false;
-      logger.i('Place added successfully: $placeName.');
+      logger.i('Place proposal submitted: ${proposition.nom}.');
       messenger.showSnackBar(
-        const SnackBar(content: Text('Lieu ajouté avec succès.')),
+        const SnackBar(
+          content: Text('Proposition envoyée, en attente de validation.'),
+        ),
       );
       navigator.pop();
     } on Object catch (error, stackTrace) {
@@ -478,12 +484,12 @@ class _AddLieuPageState extends State<AddLieuPage> {
 
       _isSubmitting.value = false;
       logger.e(
-        'Failed to add place: $placeName.',
+        'Failed to submit place proposal: ${proposition.nom}.',
         error: error,
         stackTrace: stackTrace,
       );
       messenger.showSnackBar(
-        const SnackBar(content: Text('Impossible d’ajouter le lieu.')),
+        const SnackBar(content: Text('Impossible d’envoyer la proposition.')),
       );
     }
   }
@@ -614,7 +620,7 @@ class _InfoMessage extends StatelessWidget {
             SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
-                'Votre suggestion sera enregistrée dans la base de données pour enrichir la carte du campus.',
+                'Votre suggestion sera soumise à un modérateur avant d’être publiée sur la carte du campus.',
                 style: TextStyle(
                   color: AppColors.accent,
                   fontSize: 13,

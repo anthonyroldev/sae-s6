@@ -204,7 +204,7 @@ class _FeedPageState extends State<FeedPage> {
   void _openAddLieuPage() {
     Navigator.of(
       context,
-    ).push(MaterialPageRoute<void>(builder: (_) => const AddLieuPage()));
+    ).push(MaterialPageRoute<void>(builder: (_) => AddLieuPage()));
   }
 
   Future<void> _setFavorite({
