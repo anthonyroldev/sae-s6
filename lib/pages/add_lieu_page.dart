@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
@@ -27,6 +28,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
     LieuCategorie.services,
   );
   final _isSubmitting = ValueNotifier<bool>(false);
+  final _isLocating = ValueNotifier<bool>(false);
 
   @override
   void dispose() {
@@ -38,6 +40,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
     _imageUrlController.dispose();
     _selectedCategory.dispose();
     _isSubmitting.dispose();
+    _isLocating.dispose();
     super.dispose();
   }
 
@@ -111,7 +114,41 @@ class _AddLieuPageState extends State<AddLieuPage> {
                         maxLines: 3,
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      _FieldLabel(label: 'COORDONNÉES GPS'),
+                      Row(
+                        children: [
+                          _FieldLabel(label: 'COORDONNÉES GPS'),
+                          const Spacer(),
+                          ValueListenableBuilder<bool>(
+                            valueListenable: _isLocating,
+                            builder: (context, isLocating, _) {
+                              return TextButton.icon(
+                                onPressed: isLocating
+                                    ? null
+                                    : _useCurrentPosition,
+                                icon: isLocating
+                                    ? const SizedBox.square(
+                                        dimension: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Icon(Icons.my_location, size: 18),
+                                label: const Text('Ma Position'),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: AppColors.accent,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.sm,
+                                  ),
+                                  textStyle: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: AppSpacing.xs),
                       Row(
                         children: [
@@ -194,7 +231,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
                             ),
                           )
                         : const Text(
-                            'Soumettre',
+                            'Ajouter le lieu',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -225,6 +262,62 @@ class _AddLieuPageState extends State<AddLieuPage> {
       return 'Nombre invalide';
     }
     return null;
+  }
+
+  Future<void> _useCurrentPosition() async {
+    _isLocating.value = true;
+    final messenger = ScaffoldMessenger.of(context);
+
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Activez la localisation pour utiliser votre position.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.denied) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Permission de localisation refusée.')),
+        );
+        return;
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Autorisez la localisation dans les réglages pour utiliser votre position.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+      _latitudeController.text = position.latitude.toStringAsFixed(6);
+      _longitudeController.text = position.longitude.toStringAsFixed(6);
+    } on Object catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Impossible de récupérer la position : $error')),
+      );
+    } finally {
+      _isLocating.value = false;
+    }
   }
 
   Future<void> _submit() async {
