@@ -9,8 +9,22 @@ import '../data/models/lieu.dart';
 
 /// Page used to suggest and create a new campus place.
 class AddLieuPage extends StatefulWidget {
+  /// Initial latitude displayed in the GPS field.
+  final double? initialLatitude;
+
+  /// Initial longitude displayed in the GPS field.
+  final double? initialLongitude;
+
+  /// Supabase source used to save the place.
+  final LieuSupabaseSource? lieuSource;
+
   /// Creates the add place page.
-  const AddLieuPage({super.key});
+  const AddLieuPage({
+    super.key,
+    this.initialLatitude,
+    this.initialLongitude,
+    this.lieuSource,
+  });
 
   @override
   State<AddLieuPage> createState() => _AddLieuPageState();
@@ -18,7 +32,6 @@ class AddLieuPage extends StatefulWidget {
 
 class _AddLieuPageState extends State<AddLieuPage> {
   final _formKey = GlobalKey<FormState>();
-  final _source = LieuSupabaseSource();
   final _nomController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _latitudeController = TextEditingController();
@@ -31,6 +44,13 @@ class _AddLieuPageState extends State<AddLieuPage> {
   );
   final _isSubmitting = ValueNotifier<bool>(false);
   final _isLocating = ValueNotifier<bool>(false);
+
+  @override
+  void initState() {
+    super.initState();
+    _latitudeController.text = _formatCoordinate(widget.initialLatitude);
+    _longitudeController.text = _formatCoordinate(widget.initialLongitude);
+  }
 
   @override
   void dispose() {
@@ -157,6 +177,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
                         children: [
                           Expanded(
                             child: _TextInput(
+                              key: const Key('latitude-field'),
                               controller: _latitudeController,
                               hintText: 'Latitude',
                               keyboardType:
@@ -170,6 +191,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
                           const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: _TextInput(
+                              key: const Key('longitude-field'),
                               controller: _longitudeController,
                               hintText: 'Longitude',
                               keyboardType:
@@ -268,6 +290,10 @@ class _AddLieuPageState extends State<AddLieuPage> {
       return 'Nombre invalide';
     }
     return null;
+  }
+
+  String _formatCoordinate(double? coordinate) {
+    return coordinate?.toStringAsFixed(6) ?? '';
   }
 
   Future<void> _useCurrentPosition() async {
@@ -376,7 +402,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
     );
 
     try {
-      await _source.save(lieu);
+      await (widget.lieuSource ?? LieuSupabaseSource()).save(lieu);
       if (!mounted) {
         return;
       }
@@ -545,6 +571,7 @@ class _TextInput extends StatelessWidget {
   final String? Function(String?)? validator;
 
   const _TextInput({
+    super.key,
     required this.controller,
     required this.hintText,
     this.maxLines = 1,
