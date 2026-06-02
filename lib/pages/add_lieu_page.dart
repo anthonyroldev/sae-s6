@@ -277,9 +277,6 @@ class _AddLieuPageState extends State<AddLieuPage> {
 
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!mounted) {
-        return;
-      }
       if (!serviceEnabled) {
         messenger.showSnackBar(
           const SnackBar(
@@ -292,14 +289,8 @@ class _AddLieuPageState extends State<AddLieuPage> {
       }
 
       var permission = await Geolocator.checkPermission();
-      if (!mounted) {
-        return;
-      }
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        if (!mounted) {
-          return;
-        }
       }
 
       if (permission == LocationPermission.denied) {
@@ -325,29 +316,14 @@ class _AddLieuPageState extends State<AddLieuPage> {
           accuracy: LocationAccuracy.high,
         ),
       );
-      if (!mounted) {
-        return;
-      }
-
       _latitudeController.text = position.latitude.toStringAsFixed(6);
       _longitudeController.text = position.longitude.toStringAsFixed(6);
-    } on Object catch (error, stackTrace) {
-      if (!mounted) {
-        return;
-      }
-
-      AppLogger.error(
-        'Failed to retrieve current position.',
-        error: error,
-        stackTrace: stackTrace,
-      );
+    } on Object catch (error) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Impossible de récupérer la position.')),
+        SnackBar(content: Text('Impossible de récupérer la position : $error')),
       );
     } finally {
-      if (mounted) {
-        _isLocating.value = false;
-      }
+      _isLocating.value = false;
     }
   }
 
