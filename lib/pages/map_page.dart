@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:le_repere/data/sources/lieu_supabase_source.dart';
 
 import '../core/constants/app_colors.dart';
 import '../core/utils/logger.dart';
 import '../data/models/lieu.dart';
+import '../data/sources/lieu_supabase_source.dart';
 import 'add_lieu_page.dart';
 
 /// Campus map page.
