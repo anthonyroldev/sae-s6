@@ -2,7 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'auth_source.dart';
 
-/// Supabase (GoTrue) implementation of [AuthSource] using email OTP codes.
+/// Supabase (GoTrue) implementation of [AuthSource] using email and password.
 class AuthSupabaseSource implements AuthSource {
   static const _usersTable = 'utilisateurs';
 
@@ -13,44 +13,41 @@ class AuthSupabaseSource implements AuthSource {
     : _client = client ?? Supabase.instance.client;
 
   @override
-  Future<void> sendCode({
-    required String email,
-    required bool shouldCreateUser,
-  }) {
-    return _client.auth.signInWithOtp(
+  Future<void> signIn({required String email, required String password}) async {
+    final response = await _client.auth.signInWithPassword(
       email: email,
-      shouldCreateUser: shouldCreateUser,
+      password: password,
     );
+    if (response.session == null) {
+      throw const AuthException('Aucune session creee');
+    }
   }
 
   @override
-  Future<void> verifyCode({
+  Future<void> signUp({
     required String email,
-    required String code,
-    String? name,
+    required String password,
+    required String name,
   }) async {
-    final response = await _client.auth.verifyOTP(
-      type: OtpType.email,
-      token: code,
+    final response = await _client.auth.signUp(
       email: email,
+      password: password,
+      data: {'nom': name.trim()},
     );
     if (response.session == null) {
-      throw const AuthException('Aucune session créée');
+      throw const AuthException(
+        'Confirmation email activee dans Supabase. Desactivez-la dans Auth > Providers > Email.',
+      );
     }
     final user = response.user;
-    if (user != null) {
-      final existingProfile = await _client
-          .from(_usersTable)
-          .select('nom')
-          .eq('id', user.id)
-          .maybeSingle();
-      final existingName = existingProfile?['nom']?.toString() ?? '';
-      await _client.from(_usersTable).upsert({
-        'id': user.id,
-        'email': user.email ?? email,
-        'nom': name?.trim().isNotEmpty == true ? name!.trim() : existingName,
-      }, onConflict: 'id');
+    if (user == null) {
+      throw const AuthException('Aucun utilisateur cree');
     }
+    await _client.from(_usersTable).upsert({
+      'id': user.id,
+      'email': user.email ?? email,
+      'nom': name.trim(),
+    }, onConflict: 'id');
   }
 
   @override
