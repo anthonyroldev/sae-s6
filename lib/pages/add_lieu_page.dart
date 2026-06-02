@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -282,8 +283,14 @@ class _AddLieuPageState extends State<AddLieuPage> {
       }
 
       var permission = await Geolocator.checkPermission();
+      if (!mounted) {
+        return;
+      }
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
+        if (!mounted) {
+          return;
+        }
       }
 
       if (permission == LocationPermission.denied) {
@@ -309,14 +316,24 @@ class _AddLieuPageState extends State<AddLieuPage> {
           accuracy: LocationAccuracy.high,
         ),
       );
+      if (!mounted) {
+        return;
+      }
+
       _latitudeController.text = position.latitude.toStringAsFixed(6);
       _longitudeController.text = position.longitude.toStringAsFixed(6);
     } on Object catch (error) {
+      if (!mounted) {
+        return;
+      }
+
       messenger.showSnackBar(
         SnackBar(content: Text('Impossible de récupérer la position : $error')),
       );
     } finally {
-      _isLocating.value = false;
+      if (mounted) {
+        _isLocating.value = false;
+      }
     }
   }
 
@@ -344,13 +361,21 @@ class _AddLieuPageState extends State<AddLieuPage> {
     );
 
     try {
-      await _source.save(lieu);
+      await _source.create(lieu);
+      if (!mounted) {
+        return;
+      }
+
       _isSubmitting.value = false;
       messenger.showSnackBar(
         const SnackBar(content: Text('Lieu ajouté avec succès.')),
       );
       navigator.pop();
     } on Object catch (error) {
+      if (!mounted) {
+        return;
+      }
+
       _isSubmitting.value = false;
       messenger.showSnackBar(
         SnackBar(content: Text('Impossible d’ajouter le lieu : $error')),
