@@ -16,7 +16,8 @@ create table if not exists lieux (
   description text not null default '',
   latitude double precision not null default 0,
   longitude double precision not null default 0,
-  horaire text not null default '',
+  heure_ouverture time,
+  heure_fermeture time,
   image_url text not null default '',
   categorie text not null default 'services'
 );

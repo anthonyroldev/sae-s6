@@ -1,7 +1,7 @@
 /// Converts loose back-end values (Supabase/JSON) to app model types.
 abstract final class SupabaseDataConverter {
-  static final _horaireRegex = RegExp(
-    r'^([01]?\d|2[0-3]):([0-5]\d)\s*-\s*([01]?\d|2[0-3]):([0-5]\d)$',
+  static final _timeRegex = RegExp(
+    r'^([01]?\d|2[0-3]):([0-5]\d)(?::([0-5]\d)(?:\.\d+)?)?$',
   );
 
   static int toInt(Object? value) {
@@ -33,39 +33,53 @@ abstract final class SupabaseDataConverter {
     return value?.toString() ?? '';
   }
 
-  static String toHoraire(Object? value) {
-    if (value is Map) {
-      final start = value['debut'] ?? value['start'] ?? value['ouverture'];
-      final end = value['fin'] ?? value['end'] ?? value['fermeture'];
-      return _normalizeHoraire(
-        '${_normalizeHour(start)} - ${_normalizeHour(end)}',
-      );
+  /// Converts a PostgreSQL time value to a duration since midnight.
+  static Duration? toTimeOfDay(Object? value) {
+    if (value is Duration) {
+      return value;
     }
-    if (value is List && value.length >= 2) {
-      return _normalizeHoraire(
-        '${_normalizeHour(value[0])} - ${_normalizeHour(value[1])}',
-      );
+    final match = _timeRegex.firstMatch(toStringValue(value).trim());
+    if (match == null) {
+      return null;
     }
-    return _normalizeHoraire(toStringValue(value));
+    return Duration(
+      hours: toInt(match.group(1)),
+      minutes: toInt(match.group(2)),
+      seconds: toInt(match.group(3)),
+    );
+  }
+
+  /// Formats a duration since midnight for PostgreSQL.
+  static String? formatTimeOfDay(Duration? value) {
+    if (value == null) {
+      return null;
+    }
+    final hours = value.inHours.toString().padLeft(2, '0');
+    final minutes = (value.inMinutes % Duration.minutesPerHour)
+        .toString()
+        .padLeft(2, '0');
+    return '$hours:$minutes';
   }
 
   /// Returns whether the current timestamp is inside the opening hours.
-  static bool isOpenFromHoraire({
+  static bool isOpenAt({
     required Object? currentTimestamp,
-    required String heures,
+    required Duration? heureOuverture,
+    required Duration? heureFermeture,
   }) {
-    final normalized = toHoraire(heures);
-    final match = _horaireRegex.firstMatch(normalized);
-    if (match == null) {
+    if (heureOuverture == null || heureFermeture == null) {
       return false;
     }
 
     final now = toDateTime(currentTimestamp);
     final currentMinutes = now.hour * 60 + now.minute;
-    final startMinutes = toInt(match.group(1)) * 60 + toInt(match.group(2));
-    final endMinutes = toInt(match.group(3)) * 60 + toInt(match.group(4));
+    final startMinutes = heureOuverture.inMinutes;
+    final endMinutes = heureFermeture.inMinutes;
 
-    if (startMinutes <= endMinutes) {
+    if (startMinutes == endMinutes) {
+      return true;
+    }
+    if (startMinutes < endMinutes) {
       return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
     }
     return currentMinutes >= startMinutes || currentMinutes <= endMinutes;
@@ -80,27 +94,5 @@ abstract final class SupabaseDataConverter {
     }
     return DateTime.tryParse(value?.toString() ?? '') ??
         DateTime.fromMillisecondsSinceEpoch(0);
-  }
-
-  static String _normalizeHoraire(String value) {
-    final normalized = value
-        .trim()
-        .replaceAll('h', ':')
-        .replaceAll('H', ':')
-        .replaceAll('–', '-')
-        .replaceAll('—', '-');
-    final match = _horaireRegex.firstMatch(normalized);
-    if (match == null) {
-      return normalized;
-    }
-    final startHour = toInt(match.group(1)).toString().padLeft(2, '0');
-    final endHour = toInt(match.group(3)).toString().padLeft(2, '0');
-    return '$startHour:${match.group(2)} - $endHour:${match.group(4)}';
-  }
-
-  static String _normalizeHour(Object? value) {
-    return toStringValue(
-      value,
-    ).trim().replaceAll('h', ':').replaceAll('H', ':');
   }
 }
