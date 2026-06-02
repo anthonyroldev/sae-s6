@@ -331,13 +331,18 @@ class _AddLieuPageState extends State<AddLieuPage> {
 
       _latitudeController.text = position.latitude.toStringAsFixed(6);
       _longitudeController.text = position.longitude.toStringAsFixed(6);
-    } on Object catch (error) {
+    } on Object catch (error, stackTrace) {
       if (!mounted) {
         return;
       }
 
+      AppLogger.error(
+        'Failed to retrieve current position.',
+        error: error,
+        stackTrace: stackTrace,
+      );
       messenger.showSnackBar(
-        SnackBar(content: Text('Impossible de récupérer la position : $error')),
+        const SnackBar(content: Text('Impossible de récupérer la position.')),
       );
     } finally {
       if (mounted) {
@@ -380,7 +385,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
         const SnackBar(content: Text('Lieu ajouté avec succès.')),
       );
       navigator.pop();
-    } on Object catch (error) {
+    } on Object catch (error, stackTrace) {
       if (!mounted) {
         return;
       }
