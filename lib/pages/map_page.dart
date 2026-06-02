@@ -6,6 +6,7 @@ import 'package:le_repere/data/sources/lieu_supabase_source.dart';
 import '../core/constants/app_colors.dart';
 import '../core/utils/logger.dart';
 import '../data/models/lieu.dart';
+import 'add_lieu_page.dart';
 
 /// Campus map page.
 class MapPage extends StatefulWidget {
@@ -52,7 +53,7 @@ class _MapPageState extends State<MapPage> {
           return Stack(
             fit: StackFit.expand,
             children: [
-              _CampusMap(markers: markers),
+              _CampusMap(markers: markers, onTap: _openAddLieuPage),
               if (snapshot.connectionState == ConnectionState.waiting)
                 const Center(child: CircularProgressIndicator()),
               if (snapshot.hasError)
@@ -114,21 +115,34 @@ class _MapPageState extends State<MapPage> {
       ),
     );
   }
+
+  void _openAddLieuPage(LatLng point) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => AddLieuPage(
+          initialLatitude: point.latitude,
+          initialLongitude: point.longitude,
+        ),
+      ),
+    );
+  }
 }
 
 class _CampusMap extends StatelessWidget {
   final List<Marker> markers;
+  final ValueChanged<LatLng> onTap;
 
-  const _CampusMap({required this.markers});
+  const _CampusMap({required this.markers, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return FlutterMap(
-      options: const MapOptions(
+      options: MapOptions(
         initialCenter: _MapPageState._campusCenter,
         initialZoom: 16,
         minZoom: 3,
         maxZoom: 19,
+        onTap: (_, point) => onTap(point),
       ),
       children: [
         TileLayer(
