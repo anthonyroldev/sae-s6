@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
+import '../core/utils/app_logger.dart';
 import '../data/models/lieu.dart';
 import '../data/sources/lieu_supabase_source.dart';
 import 'add_lieu_page.dart';
@@ -50,7 +51,11 @@ class _FeedPageState extends State<FeedPage> {
           stream: _lieuSource.watchAll(),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
-              debugPrint('Feed Firestore error: ${snapshot.error}');
+              AppLogger.error(
+                'Failed to load feed places.',
+                error: snapshot.error,
+                stackTrace: snapshot.stackTrace,
+              );
             }
 
             return CustomScrollView(
@@ -93,7 +98,7 @@ class _FeedPageState extends State<FeedPage> {
           hasScrollBody: false,
           child: Center(
             child: Text(
-              'Erreur de chargement\n${snapshot.error}',
+              'Erreur de chargement des lieux',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: AppColors.secondaryText,
