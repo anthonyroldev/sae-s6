@@ -4,47 +4,49 @@ import 'package:le_repere/data/sources/auth_source.dart';
 
 /// In-memory [AuthSource] for widget tests.
 class FakeAuthSource implements AuthSource {
-  /// OTP requests passed to [sendCode], in order.
-  final List<({String email, bool shouldCreateUser})> sentCodes = [];
+  /// Login requests, in order.
+  final List<({String email, String password})> signIns = [];
 
-  /// OTP verification requests, in order.
-  final List<({String email, String code, String? name})> verifiedCodes = [];
+  /// Signup requests, in order.
+  final List<({String email, String password, String name})> signUps = [];
 
   /// Number of times [signOut] was called.
   int signOutCount = 0;
 
-  /// When set, [sendCode] throws this instead of succeeding.
-  Object? throwOnSend;
+  /// When set, [signIn] throws this instead of succeeding.
+  Object? throwOnSignIn;
 
-  /// When set, [verifyCode] throws this instead of succeeding.
-  Object? throwOnVerify;
+  /// When set, [signUp] throws this instead of succeeding.
+  Object? throwOnSignUp;
 
   bool _signedIn = false;
   final StreamController<bool> _controller = StreamController<bool>.broadcast();
 
   @override
-  Future<void> sendCode({
-    required String email,
-    required bool shouldCreateUser,
-  }) async {
-    final error = throwOnSend;
+  Future<void> signIn({required String email, required String password}) async {
+    final error = throwOnSignIn;
     if (error != null) {
       throw error;
     }
-    sentCodes.add((email: email, shouldCreateUser: shouldCreateUser));
+    signIns.add((email: email, password: password));
+    _setSignedIn();
   }
 
   @override
-  Future<void> verifyCode({
+  Future<void> signUp({
     required String email,
-    required String code,
-    String? name,
+    required String password,
+    required String name,
   }) async {
-    final error = throwOnVerify;
+    final error = throwOnSignUp;
     if (error != null) {
       throw error;
     }
-    verifiedCodes.add((email: email, code: code, name: name));
+    signUps.add((email: email, password: password, name: name));
+    _setSignedIn();
+  }
+
+  void _setSignedIn() {
     _signedIn = true;
     _controller.add(true);
   }

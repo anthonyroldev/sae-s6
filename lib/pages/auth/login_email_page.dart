@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/utils/email_domain_validator.dart';
 import '../../data/sources/auth_source.dart';
 import '../../data/sources/auth_supabase_source.dart';
-import 'login_code_page.dart';
 
-/// First authentication step: login or institutional account creation.
+/// Email/password login or institutional account creation.
 class LoginEmailPage extends StatefulWidget {
   /// Auth backend injected for testing.
   final AuthSource authSource;
@@ -24,6 +24,7 @@ class LoginEmailPage extends StatefulWidget {
 class _LoginEmailPageState extends State<LoginEmailPage> {
   final _emailController = TextEditingController();
   final _nameController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isSignup = false;
   bool _isLoading = false;
   String? _error;
@@ -32,6 +33,7 @@ class _LoginEmailPageState extends State<LoginEmailPage> {
   void dispose() {
     _emailController.dispose();
     _nameController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -45,6 +47,7 @@ class _LoginEmailPageState extends State<LoginEmailPage> {
   Future<void> _submit() async {
     final email = _emailController.text.trim().toLowerCase();
     final name = _nameController.text.trim();
+    final password = _passwordController.text;
     if (!EmailDomainValidator.isValidEmail(email)) {
       setState(() => _error = 'Adresse email invalide');
       return;
@@ -57,29 +60,30 @@ class _LoginEmailPageState extends State<LoginEmailPage> {
       setState(() => _error = 'Utilisez une adresse email universitaire');
       return;
     }
+    if (password.length < 8) {
+      setState(() => _error = 'Mot de passe: 8 caractères minimum');
+      return;
+    }
 
     setState(() {
       _isLoading = true;
       _error = null;
     });
     try {
-      await widget.authSource.sendCode(
-        email: email,
-        shouldCreateUser: _isSignup,
-      );
+      if (_isSignup) {
+        await widget.authSource.signUp(
+          email: email,
+          password: password,
+          name: name,
+        );
+      } else {
+        await widget.authSource.signIn(email: email, password: password);
+      }
+    } on AuthException catch (error) {
       if (!mounted) {
         return;
       }
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => LoginCodePage(
-            email: email,
-            name: _isSignup ? name : null,
-            shouldCreateUser: _isSignup,
-            authSource: widget.authSource,
-          ),
-        ),
-      );
+      setState(() => _error = error.message);
     } on Object {
       if (!mounted) {
         return;
@@ -87,7 +91,7 @@ class _LoginEmailPageState extends State<LoginEmailPage> {
       setState(
         () => _error = _isSignup
             ? "Échec de la création du compte"
-            : "Échec de l'envoi du code",
+            : 'Échec de la connexion',
       );
     } finally {
       if (mounted) {
@@ -164,11 +168,22 @@ class _LoginEmailPageState extends State<LoginEmailPage> {
                       key: const Key('email-field'),
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => _isLoading ? null : _submit(),
+                      textInputAction: TextInputAction.next,
                       decoration: _inputDecoration(
                         label: 'Adresse email',
                         icon: Icons.mail_outline,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    TextField(
+                      key: const Key('password-field'),
+                      controller: _passwordController,
+                      obscureText: true,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _isLoading ? null : _submit(),
+                      decoration: _inputDecoration(
+                        label: 'Mot de passe',
+                        icon: Icons.lock_outline,
                       ),
                     ),
                     if (_error != null) ...[
@@ -183,7 +198,7 @@ class _LoginEmailPageState extends State<LoginEmailPage> {
                     ],
                     const SizedBox(height: AppSpacing.lg),
                     FilledButton(
-                      key: const Key('send-code-button'),
+                      key: const Key('auth-submit-button'),
                       onPressed: _isLoading ? null : _submit,
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.accent,
@@ -200,9 +215,7 @@ class _LoginEmailPageState extends State<LoginEmailPage> {
                               ),
                             )
                           : Text(
-                              _isSignup
-                                  ? 'Créer mon compte'
-                                  : 'Recevoir le code',
+                              _isSignup ? 'Créer mon compte' : 'Se connecter',
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
