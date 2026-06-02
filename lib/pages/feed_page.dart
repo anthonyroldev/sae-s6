@@ -4,6 +4,8 @@ import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
 import '../core/utils/logger.dart';
 import '../data/models/lieu.dart';
+import '../data/sources/favoris_source.dart';
+import '../data/sources/favoris_supabase_source.dart';
 import '../data/sources/lieu_supabase_source.dart';
 import 'add_lieu_page.dart';
 import 'feed/home_header.dart';
@@ -22,6 +24,7 @@ class FeedPage extends StatefulWidget {
 
 class _FeedPageState extends State<FeedPage> {
   final _lieuSource = LieuSupabaseSource();
+  final _favorisSource = FavorisSupabaseSource();
   final _searchController = TextEditingController();
   final _searchQuery = ValueNotifier<String>('');
   final _selectedCategory = ValueNotifier<LieuCategorie>(LieuCategorie.all);
@@ -73,7 +76,7 @@ class _FeedPageState extends State<FeedPage> {
                     },
                   ),
                 ),
-                ..._buildContentSlivers(snapshot),
+                ..._buildContentSlivers(snapshot, _favorisSource),
               ],
             );
           },
@@ -82,7 +85,10 @@ class _FeedPageState extends State<FeedPage> {
     );
   }
 
-  List<Widget> _buildContentSlivers(AsyncSnapshot<List<Lieu>> snapshot) {
+  List<Widget> _buildContentSlivers(
+    AsyncSnapshot<List<Lieu>> snapshot,
+    FavorisSource favorisSource,
+  ) {
     if (snapshot.connectionState == ConnectionState.waiting) {
       return const [
         SliverFillRemaining(
@@ -113,46 +119,69 @@ class _FeedPageState extends State<FeedPage> {
 
     final places = snapshot.data ?? const <Lieu>[];
     return [
-      ValueListenableBuilder<String>(
-        valueListenable: _searchQuery,
-        builder: (context, query, _) {
-          final filteredPlaces = places
-              .where(
-                (place) =>
-                    _matchesSearch(place, query) &&
-                    _matchesFilter(place, _selectedCategory.value),
-              )
-              .toList(growable: false);
+      StreamBuilder<Set<String>>(
+        stream: favorisSource.watchCurrentUserPlaceIds(),
+        initialData: const <String>{},
+        builder: (context, favoritesSnapshot) {
+          final favoriteIds = favoritesSnapshot.data ?? const <String>{};
 
-          if (filteredPlaces.isEmpty) {
-            return const SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(
-                child: Text(
-                  'Aucun lieu trouve',
-                  style: TextStyle(
-                    color: AppColors.secondaryText,
-                    fontSize: 16,
-                    height: 1.4,
+          return ValueListenableBuilder<String>(
+            valueListenable: _searchQuery,
+            builder: (context, query, _) {
+              final filteredPlaces = places
+                  .where(
+                    (place) =>
+                        _matchesSearch(place, query) &&
+                        _matchesFilter(place, _selectedCategory.value),
+                  )
+                  .toList(growable: false);
+
+              if (filteredPlaces.isEmpty) {
+                return const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Text(
+                      'Aucun lieu trouve',
+                      style: TextStyle(
+                        color: AppColors.secondaryText,
+                        fontSize: 16,
+                        height: 1.4,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            );
-          }
+                );
+              }
 
-          return SliverPadding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              AppSpacing.md,
-              AppSpacing.md,
-              AppSpacing.lg,
-            ),
-            sliver: SliverList.separated(
-              itemCount: filteredPlaces.length,
-              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
-              itemBuilder: (context, index) =>
-                  PlaceCard(place: filteredPlaces[index]),
-            ),
+              return SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  AppSpacing.lg,
+                ),
+                sliver: SliverList.separated(
+                  itemCount: filteredPlaces.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(height: AppSpacing.md),
+                  itemBuilder: (context, index) {
+                    final place = filteredPlaces[index];
+                    final isFavorite = favoriteIds.contains(place.id);
+
+                    return PlaceCard(
+                      place: place,
+                      isFavorite: isFavorite,
+                      onFavoritePressed: () {
+                        _setFavorite(
+                          favorisSource: favorisSource,
+                          place: place,
+                          isFavorite: !isFavorite,
+                        );
+                      },
+                    );
+                  },
+                ),
+              );
+            },
           );
         },
       ),
@@ -176,5 +205,27 @@ class _FeedPageState extends State<FeedPage> {
     Navigator.of(
       context,
     ).push(MaterialPageRoute<void>(builder: (_) => const AddLieuPage()));
+  }
+
+  Future<void> _setFavorite({
+    required FavorisSource favorisSource,
+    required Lieu place,
+    required bool isFavorite,
+  }) async {
+    try {
+      await favorisSource.setFavorite(lieuId: place.id, isFavorite: isFavorite);
+    } on Object catch (error, stackTrace) {
+      logger.e(
+        'Failed to update favorite place.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossible de modifier les favoris.')),
+      );
+    }
   }
 }
