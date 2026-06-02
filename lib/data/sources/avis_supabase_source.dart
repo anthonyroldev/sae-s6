@@ -25,7 +25,10 @@ class AvisSupabaseSource {
   /// Adds or updates one review for a place.
   Future<void> save(Avis avis) {
     _validateAvis(avis);
-    return _client.from(_table).upsert(avis.toMap());
+    if (avis.idAvis == 0) {
+      return _client.from(_table).insert(avis.toMap());
+    }
+    return _client.from(_table).update(avis.toMap()).eq('id_avis', avis.idAvis);
   }
 
   void _validateAvis(Avis avis) {

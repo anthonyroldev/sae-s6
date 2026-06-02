@@ -98,7 +98,7 @@ class Lieu {
   /// Converts this place to a Supabase row.
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
+      if (id.isNotEmpty) 'id': id,
       'nom': nom,
       'description': description,
       'latitude': latitude,
