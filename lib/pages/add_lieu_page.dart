@@ -1,5 +1,8 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:le_repere/data/sources/lieu_supabase_source.dart';
 
 import '../core/constants/app_colors.dart';
@@ -38,7 +41,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
   final _longitudeController = TextEditingController();
   final _heureOuverture = ValueNotifier<TimeOfDay?>(null);
   final _heureFermeture = ValueNotifier<TimeOfDay?>(null);
-  final _imageUrlController = TextEditingController();
+  final _selectedImage = ValueNotifier<_PickedImage?>(null);
   final _selectedCategory = ValueNotifier<LieuCategorie>(
     LieuCategorie.services,
   );
@@ -60,7 +63,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
     _longitudeController.dispose();
     _heureOuverture.dispose();
     _heureFermeture.dispose();
-    _imageUrlController.dispose();
+    _selectedImage.dispose();
     _selectedCategory.dispose();
     _isSubmitting.dispose();
     _isLocating.dispose();
@@ -223,10 +226,9 @@ class _AddLieuPageState extends State<AddLieuPage> {
                       const SizedBox(height: AppSpacing.md),
                       _FieldLabel(label: 'IMAGE'),
                       const SizedBox(height: AppSpacing.xs),
-                      _TextInput(
-                        controller: _imageUrlController,
-                        hintText: 'URL de l’image du lieu',
-                        keyboardType: TextInputType.url,
+                      _ImagePickerInput(
+                        selectedImage: _selectedImage,
+                        onPickImage: _pickImage,
                       ),
                     ],
                   ),
@@ -376,6 +378,54 @@ class _AddLieuPageState extends State<AddLieuPage> {
     }
   }
 
+  Future<void> _pickImage() async {
+    try {
+      final image = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+      if (!mounted || image == null) {
+        return;
+      }
+
+      final bytes = await image.readAsBytes();
+      if (!mounted) {
+        return;
+      }
+
+      _selectedImage.value = _PickedImage(
+        name: image.name,
+        bytes: bytes,
+        contentType: image.mimeType,
+      );
+    } on Object catch (error, stackTrace) {
+      logger.e(
+        'Failed to pick place image.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossible d’importer cette image.')),
+      );
+    }
+  }
+
+  Future<String> _uploadSelectedImage(LieuSupabaseSource source) {
+    final image = _selectedImage.value;
+    if (image == null) {
+      return Future.value('');
+    }
+
+    return source.uploadImage(
+      bytes: image.bytes,
+      fileName: image.name,
+      contentType: image.contentType,
+    );
+  }
+
   Future<void> _submit() async {
     final formState = _formKey.currentState;
     if (formState == null || !formState.validate()) {
@@ -386,29 +436,37 @@ class _AddLieuPageState extends State<AddLieuPage> {
     _isSubmitting.value = true;
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
-    final lieu = Lieu(
-      nom: _nomController.text.trim(),
-      description: _descriptionController.text.trim(),
-      latitude: double.parse(
-        _latitudeController.text.trim().replaceAll(',', '.'),
-      ),
-      longitude: double.parse(
-        _longitudeController.text.trim().replaceAll(',', '.'),
-      ),
-      categorie: _selectedCategory.value,
-      heureOuverture: _toDuration(_heureOuverture.value),
-      heureFermeture: _toDuration(_heureFermeture.value),
-      imageUrl: _imageUrlController.text.trim(),
-    );
+    final source = widget.lieuSource ?? LieuSupabaseSource();
+    final placeName = _nomController.text.trim();
 
     try {
-      await (widget.lieuSource ?? LieuSupabaseSource()).save(lieu);
+      final imageUrl = await _uploadSelectedImage(source);
+      if (!mounted) {
+        return;
+      }
+
+      final lieu = Lieu(
+        nom: placeName,
+        description: _descriptionController.text.trim(),
+        latitude: double.parse(
+          _latitudeController.text.trim().replaceAll(',', '.'),
+        ),
+        longitude: double.parse(
+          _longitudeController.text.trim().replaceAll(',', '.'),
+        ),
+        categorie: _selectedCategory.value,
+        heureOuverture: _toDuration(_heureOuverture.value),
+        heureFermeture: _toDuration(_heureFermeture.value),
+        imageUrl: imageUrl,
+      );
+
+      await source.save(lieu);
       if (!mounted) {
         return;
       }
 
       _isSubmitting.value = false;
-      logger.i('Place added successfully: ${lieu.nom}.');
+      logger.i('Place added successfully: $placeName.');
       messenger.showSnackBar(
         const SnackBar(content: Text('Lieu ajouté avec succès.')),
       );
@@ -420,7 +478,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
 
       _isSubmitting.value = false;
       logger.e(
-        'Failed to add place: ${lieu.nom}.',
+        'Failed to add place: $placeName.',
         error: error,
         stackTrace: stackTrace,
       );
@@ -435,6 +493,70 @@ class _AddLieuPageState extends State<AddLieuPage> {
       return null;
     }
     return Duration(hours: time.hour, minutes: time.minute);
+  }
+}
+
+class _PickedImage {
+  final String name;
+  final Uint8List bytes;
+  final String? contentType;
+
+  const _PickedImage({
+    required this.name,
+    required this.bytes,
+    required this.contentType,
+  });
+}
+
+class _ImagePickerInput extends StatelessWidget {
+  final ValueNotifier<_PickedImage?> selectedImage;
+  final VoidCallback onPickImage;
+
+  const _ImagePickerInput({
+    required this.selectedImage,
+    required this.onPickImage,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<_PickedImage?>(
+      valueListenable: selectedImage,
+      builder: (context, image, _) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            OutlinedButton.icon(
+              onPressed: onPickImage,
+              icon: const Icon(Icons.photo_library_outlined),
+              label: Text(
+                image == null ? 'Importer une image' : 'Changer l’image',
+              ),
+            ),
+            if (image != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.memory(
+                  image.bytes,
+                  height: 160,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                image.name,
+                style: const TextStyle(
+                  color: AppColors.secondaryText,
+                  fontSize: 12,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ],
+        );
+      },
+    );
   }
 }
 
