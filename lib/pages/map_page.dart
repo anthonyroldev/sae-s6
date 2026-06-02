@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:le_repere/data/sources/lieu_supabase_source.dart';
 
 import '../core/constants/app_colors.dart';
+import '../core/utils/logger.dart';
 import '../data/models/lieu.dart';
 
 /// Campus map page.
@@ -35,7 +36,11 @@ class _MapPageState extends State<MapPage> {
         stream: _lieuxStream,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            debugPrint('Map Firestore error: ${snapshot.error}');
+            logger.e(
+              'Failed to load map places.',
+              error: snapshot.error,
+              stackTrace: snapshot.stackTrace,
+            );
           }
 
           final places = snapshot.hasData ? snapshot.data! : const <Lieu>[];
