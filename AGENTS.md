@@ -148,7 +148,7 @@ accepted for compatibility.
 
 ```text
 lieux
-  id, nom, description, latitude, longitude, horaire, image_url, categorie
+  id, nom, description, latitude, longitude, heure_ouverture, heure_fermeture, image_url, categorie
 
 avis
   id_avis, note, commentaire, created_at, id_lieu, id_utilisateur

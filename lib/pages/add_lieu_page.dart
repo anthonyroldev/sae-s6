@@ -23,7 +23,8 @@ class _AddLieuPageState extends State<AddLieuPage> {
   final _descriptionController = TextEditingController();
   final _latitudeController = TextEditingController();
   final _longitudeController = TextEditingController();
-  final _horaireController = TextEditingController();
+  final _heureOuverture = ValueNotifier<TimeOfDay?>(null);
+  final _heureFermeture = ValueNotifier<TimeOfDay?>(null);
   final _imageUrlController = TextEditingController();
   final _selectedCategory = ValueNotifier<LieuCategorie>(
     LieuCategorie.services,
@@ -37,7 +38,8 @@ class _AddLieuPageState extends State<AddLieuPage> {
     _descriptionController.dispose();
     _latitudeController.dispose();
     _longitudeController.dispose();
-    _horaireController.dispose();
+    _heureOuverture.dispose();
+    _heureFermeture.dispose();
     _imageUrlController.dispose();
     _selectedCategory.dispose();
     _isSubmitting.dispose();
@@ -192,9 +194,9 @@ class _AddLieuPageState extends State<AddLieuPage> {
                       const SizedBox(height: AppSpacing.md),
                       _FieldLabel(label: 'HORAIRES'),
                       const SizedBox(height: AppSpacing.xs),
-                      _TextInput(
-                        controller: _horaireController,
-                        hintText: 'Ex: 08:00 - 18:00',
+                      _TimeRangeInput(
+                        heureOuverture: _heureOuverture,
+                        heureFermeture: _heureFermeture,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       _FieldLabel(label: 'IMAGE'),
@@ -368,7 +370,8 @@ class _AddLieuPageState extends State<AddLieuPage> {
         _longitudeController.text.trim().replaceAll(',', '.'),
       ),
       categorie: _selectedCategory.value,
-      horaireOuverture: _horaireController.text.trim(),
+      heureOuverture: _toDuration(_heureOuverture.value),
+      heureFermeture: _toDuration(_heureFermeture.value),
       imageUrl: _imageUrlController.text.trim(),
     );
 
@@ -399,6 +402,13 @@ class _AddLieuPageState extends State<AddLieuPage> {
         const SnackBar(content: Text('Impossible d’ajouter le lieu.')),
       );
     }
+  }
+
+  Duration? _toDuration(TimeOfDay? time) {
+    if (time == null) {
+      return null;
+    }
+    return Duration(hours: time.hour, minutes: time.minute);
   }
 }
 
@@ -550,6 +560,62 @@ class _TextInput extends StatelessWidget {
       keyboardType: keyboardType,
       validator: validator,
       decoration: _inputDecoration(hintText),
+    );
+  }
+}
+
+class _TimeRangeInput extends StatelessWidget {
+  final ValueNotifier<TimeOfDay?> heureOuverture;
+  final ValueNotifier<TimeOfDay?> heureFermeture;
+
+  const _TimeRangeInput({
+    required this.heureOuverture,
+    required this.heureFermeture,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _TimeInput(label: 'Ouverture', value: heureOuverture),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: _TimeInput(label: 'Fermeture', value: heureFermeture),
+        ),
+      ],
+    );
+  }
+}
+
+class _TimeInput extends StatelessWidget {
+  final String label;
+  final ValueNotifier<TimeOfDay?> value;
+
+  const _TimeInput({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<TimeOfDay?>(
+      valueListenable: value,
+      builder: (context, time, _) {
+        return InkWell(
+          onTap: () async {
+            final selected = await showTimePicker(
+              context: context,
+              initialTime: time ?? const TimeOfDay(hour: 8, minute: 0),
+            );
+            if (selected != null) {
+              value.value = selected;
+            }
+          },
+          child: InputDecorator(
+            decoration: _inputDecoration(label),
+            child: Text(time?.format(context) ?? label),
+          ),
+        );
+      },
     );
   }
 }

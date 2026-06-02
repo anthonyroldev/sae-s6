@@ -1,6 +1,6 @@
 import '../../core/utils/supabase_data_converter.dart';
 
-/// Place category used by Firestore and feed filters.
+/// Place category used by Supabase and feed filters.
 enum LieuCategorie {
   all('Pour vous', ''),
   repas('Repas', 'repas'),
@@ -12,12 +12,12 @@ enum LieuCategorie {
   /// Display label.
   final String label;
 
-  /// Firestore value.
+  /// Supabase value.
   final String value;
 
   const LieuCategorie(this.label, this.value);
 
-  /// Builds a category from Firestore data.
+  /// Builds a category from Supabase data.
   static LieuCategorie fromValue(Object? value) {
     final normalized = SupabaseDataConverter.toStringValue(value)
         .trim()
@@ -59,7 +59,8 @@ class Lieu {
   final String description;
   final double latitude;
   final double longitude;
-  final String horaireOuverture;
+  final Duration? heureOuverture;
+  final Duration? heureFermeture;
   final String imageUrl;
   final LieuCategorie categorie;
 
@@ -71,12 +72,11 @@ class Lieu {
     this.latitude = 0,
     this.longitude = 0,
     this.categorie = LieuCategorie.services,
-    String? horaireOuverture,
-    String? heures,
+    this.heureOuverture,
+    this.heureFermeture,
     String? photo,
     String? imageUrl,
-  }) : horaireOuverture = horaireOuverture ?? heures ?? '',
-       imageUrl = imageUrl ?? photo ?? '';
+  }) : imageUrl = imageUrl ?? photo ?? '';
 
   /// Creates a place from a Supabase row.
   factory Lieu.fromMap(Map<String, dynamic> map) {
@@ -86,13 +86,8 @@ class Lieu {
       description: SupabaseDataConverter.toStringValue(map['description']),
       latitude: SupabaseDataConverter.toDouble(map['latitude'] ?? map['lat']),
       longitude: SupabaseDataConverter.toDouble(map['longitude'] ?? map['lng']),
-      horaireOuverture: SupabaseDataConverter.toHoraire(
-        map['horaire'] ??
-            map['horaires'] ??
-            map['horaireOuverture'] ??
-            map['heures'] ??
-            map['openingHours'],
-      ),
+      heureOuverture: SupabaseDataConverter.toTimeOfDay(map['heure_ouverture']),
+      heureFermeture: SupabaseDataConverter.toTimeOfDay(map['heure_fermeture']),
       imageUrl: SupabaseDataConverter.toStringValue(
         map['image_url'] ?? map['photo'] ?? map['imageUrl'],
       ),
@@ -108,7 +103,8 @@ class Lieu {
       'description': description,
       'latitude': latitude,
       'longitude': longitude,
-      'horaire': horaireOuverture,
+      'heure_ouverture': SupabaseDataConverter.formatTimeOfDay(heureOuverture),
+      'heure_fermeture': SupabaseDataConverter.formatTimeOfDay(heureFermeture),
       'image_url': imageUrl,
       'categorie': categorie.value,
     };
@@ -121,7 +117,8 @@ class Lieu {
     String? description,
     double? latitude,
     double? longitude,
-    String? horaireOuverture,
+    Duration? heureOuverture,
+    Duration? heureFermeture,
     String? imageUrl,
     LieuCategorie? categorie,
   }) {
@@ -131,18 +128,30 @@ class Lieu {
       description: description ?? this.description,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
-      horaireOuverture: horaireOuverture ?? this.horaireOuverture,
+      heureOuverture: heureOuverture ?? this.heureOuverture,
+      heureFermeture: heureFermeture ?? this.heureFermeture,
       imageUrl: imageUrl ?? this.imageUrl,
       categorie: categorie ?? this.categorie,
     );
   }
 
-  /// Opening hours alias used by place cards.
-  String get heures => horaireOuverture;
+  /// Opening hours label used by place cards.
+  String get heures {
+    final ouverture = SupabaseDataConverter.formatTimeOfDay(heureOuverture);
+    final fermeture = SupabaseDataConverter.formatTimeOfDay(heureFermeture);
+    if (ouverture == null || fermeture == null) {
+      return '';
+    }
+    if (ouverture == fermeture) {
+      return '24h/24';
+    }
+    return '$ouverture - $fermeture';
+  }
 
   /// Whether the place is currently open.
-  bool get isOpen => SupabaseDataConverter.isOpenFromHoraire(
+  bool get isOpen => SupabaseDataConverter.isOpenAt(
     currentTimestamp: DateTime.now(),
-    heures: horaireOuverture,
+    heureOuverture: heureOuverture,
+    heureFermeture: heureFermeture,
   );
 }
