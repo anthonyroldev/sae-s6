@@ -7,9 +7,22 @@ import 'place_image.dart';
 
 /// Card displaying one campus place.
 class PlaceCard extends StatelessWidget {
+  /// Place displayed by this card.
   final Lieu place;
 
-  const PlaceCard({super.key, required this.place});
+  /// Whether the place is marked as favorite by the current user.
+  final bool isFavorite;
+
+  /// Called when the favorite button is pressed.
+  final VoidCallback? onFavoritePressed;
+
+  /// Creates a place card.
+  const PlaceCard({
+    super.key,
+    required this.place,
+    this.isFavorite = false,
+    this.onFavoritePressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -36,14 +49,34 @@ class PlaceCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    place.nom,
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      height: 1.3,
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          place.nom,
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            height: 1.3,
+                          ),
+                        ),
+                      ),
+                      if (onFavoritePressed != null)
+                        IconButton(
+                          onPressed: onFavoritePressed,
+                          tooltip: isFavorite
+                              ? 'Retirer des favoris'
+                              : 'Ajouter aux favoris',
+                          icon: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: isFavorite
+                                ? AppColors.errorText
+                                : AppColors.secondaryText,
+                          ),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(

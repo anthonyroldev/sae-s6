@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le_repere/data/models/lieu.dart';
 import 'package:le_repere/data/models/utilisateur.dart';
 import 'package:le_repere/data/sources/auth_source.dart';
+import 'package:le_repere/data/sources/favoris_source.dart';
 import 'package:le_repere/pages/profil_page.dart';
 
 import '../support/fake_auth_source.dart';
+import '../support/fake_favoris_source.dart';
 import '../support/fake_utilisateur_source.dart';
 
 void main() {
@@ -24,6 +27,29 @@ void main() {
     expect(find.text('Jules Baron'), findsOneWidget);
     expect(find.text('jules.baron@uphf.fr'), findsOneWidget);
     expect(find.text('Valenciennes'), findsOneWidget);
+  });
+
+  testWidgets('shows favorite places', (tester) async {
+    const favoritePlace = Lieu(
+      id: 'place-id',
+      nom: 'BU Sciences',
+      description: 'Bibliotheque universitaire',
+      categorie: LieuCategorie.bibliotheque,
+    );
+
+    await tester.pumpWidget(
+      _buildPage(
+        Stream.value(utilisateur),
+        favorisSource: FakeFavorisSource(
+          placesStream: Stream.value(const [favoritePlace]),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Mes favoris'), findsOneWidget);
+    expect(find.text('BU Sciences'), findsOneWidget);
   });
 
   testWidgets('hides empty GPS position', (tester) async {
@@ -84,11 +110,16 @@ void main() {
   });
 }
 
-Widget _buildPage(Stream<Utilisateur?> stream, {AuthSource? authSource}) {
+Widget _buildPage(
+  Stream<Utilisateur?> stream, {
+  AuthSource? authSource,
+  FavorisSource? favorisSource,
+}) {
   return MaterialApp(
     home: ProfilPage(
       authSource: authSource ?? FakeAuthSource(),
       utilisateurSource: FakeUtilisateurSource(stream),
+      favorisSource: favorisSource ?? FakeFavorisSource(),
     ),
   );
 }
