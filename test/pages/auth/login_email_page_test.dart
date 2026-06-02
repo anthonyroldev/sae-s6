@@ -128,12 +128,16 @@ void main() {
     expect(auth.sentCodes, [
       (email: 'student@etu.univ-lille.fr', shouldCreateUser: true),
     ]);
-    await tester.enterText(find.byKey(const Key('code-field')), '123456');
+    await tester.enterText(find.byKey(const Key('code-field')), '12345678');
     await tester.tap(find.byKey(const Key('verify-code-button')));
     await tester.pumpAndSettle();
 
     expect(auth.verifiedCodes, [
-      (email: 'student@etu.univ-lille.fr', code: '123456', name: 'Jules Baron'),
+      (
+        email: 'student@etu.univ-lille.fr',
+        code: '12345678',
+        name: 'Jules Baron',
+      ),
     ]);
   });
 

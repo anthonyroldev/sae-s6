@@ -15,12 +15,12 @@ void main() {
       ),
     );
 
-    await tester.enterText(find.byKey(const Key('code-field')), '123456');
+    await tester.enterText(find.byKey(const Key('code-field')), '12345678');
     await tester.tap(find.byKey(const Key('verify-code-button')));
     await tester.pumpAndSettle();
 
     expect(auth.verifiedCodes, [
-      (email: 'a@b.com', code: '123456', name: null),
+      (email: 'a@b.com', code: '12345678', name: null),
     ]);
   });
 
@@ -34,7 +34,7 @@ void main() {
       ),
     );
 
-    await tester.enterText(find.byKey(const Key('code-field')), '000000');
+    await tester.enterText(find.byKey(const Key('code-field')), '00000000');
     await tester.tap(find.byKey(const Key('verify-code-button')));
     await tester.pumpAndSettle();
 
