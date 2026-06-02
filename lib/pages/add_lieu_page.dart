@@ -32,7 +32,6 @@ class AddLieuPage extends StatefulWidget {
 
 class _AddLieuPageState extends State<AddLieuPage> {
   final _formKey = GlobalKey<FormState>();
-  late final LieuSupabaseSource _source;
   final _nomController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _latitudeController = TextEditingController();
@@ -49,7 +48,6 @@ class _AddLieuPageState extends State<AddLieuPage> {
   @override
   void initState() {
     super.initState();
-    _source = widget.lieuSource ?? LieuSupabaseSource();
     _latitudeController.text = _formatCoordinate(widget.initialLatitude);
     _longitudeController.text = _formatCoordinate(widget.initialLongitude);
   }
@@ -404,7 +402,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
     );
 
     try {
-      await _source.save(lieu);
+      await (widget.lieuSource ?? LieuSupabaseSource()).save(lieu);
       if (!mounted) {
         return;
       }
