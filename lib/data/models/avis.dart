@@ -3,7 +3,7 @@ import '../../core/utils/supabase_data_converter.dart';
 /// Place review ready for Supabase reads and writes.
 class Avis {
   final int idAvis;
-  final int note;
+  final double note;
   final String commentaire;
   final DateTime date;
   final String idLieu;
@@ -21,7 +21,7 @@ class Avis {
 
   /// Creates a new review with the current date.
   factory Avis.create({
-    required int note,
+    required double note,
     required String commentaire,
     required String idLieu,
     required String idUtilisateur,
@@ -39,7 +39,7 @@ class Avis {
   factory Avis.fromMap(Map<String, dynamic> map) {
     return Avis(
       idAvis: SupabaseDataConverter.toInt(map['id_avis'] ?? map['idAvis']),
-      note: SupabaseDataConverter.toInt(map['note']),
+      note: SupabaseDataConverter.toDouble(map['note']),
       commentaire: SupabaseDataConverter.toStringValue(map['commentaire']),
       date: SupabaseDataConverter.toDateTime(
         map['created_at'] ?? map['date'] ?? map['createdAt'],
