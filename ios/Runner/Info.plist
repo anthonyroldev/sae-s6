@@ -30,6 +30,8 @@
 	<string>Votre position permet de remplir automatiquement les coordonnées du lieu proposé.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Votre position permet de remplir automatiquement les coordonnées du lieu proposé.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Vos photos permettent d'ajouter une image au lieu proposé.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
