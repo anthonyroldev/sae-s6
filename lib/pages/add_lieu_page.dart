@@ -423,10 +423,10 @@ class _AddLieuPageState extends State<AddLieuPage> {
     }
   }
 
-  Future<String> _uploadSelectedImage(LieuSupabaseSource source) {
+  Future<UploadedImage?> _uploadSelectedImage(LieuSupabaseSource source) {
     final image = _selectedImage.value;
     if (image == null) {
-      return Future.value('');
+      return Future.value(null);
     }
 
     return source.uploadImage(
@@ -449,11 +449,9 @@ class _AddLieuPageState extends State<AddLieuPage> {
     final source = widget.lieuSource ?? LieuSupabaseSource();
     final placeName = _nomController.text.trim();
 
+    UploadedImage? uploadedImage;
     try {
-      final imageUrl = await _uploadSelectedImage(source);
-      if (!mounted) {
-        return;
-      }
+      uploadedImage = await _uploadSelectedImage(source);
 
       final proposition = PropositionLieu(
         nom: placeName,
@@ -467,7 +465,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
         categorie: _selectedCategory.value,
         heureOuverture: _toDuration(_heureOuverture.value),
         heureFermeture: _toDuration(_heureFermeture.value),
-        imageUrl: imageUrl,
+        imageUrl: uploadedImage?.url ?? '',
       );
 
       await widget.propositionSource.soumettre(proposition);
@@ -484,20 +482,38 @@ class _AddLieuPageState extends State<AddLieuPage> {
       );
       navigator.pop();
     } on Object catch (error, stackTrace) {
-      if (!mounted) {
-        return;
+      // The image is uploaded before the proposal is submitted; if submission
+      // fails, drop the orphaned file so storage keeps no dangling images.
+      if (uploadedImage != null) {
+        await _removeOrphanImage(source, uploadedImage.path);
       }
 
-      _isSubmitting.value = false;
       logger.e(
         'Failed to submit place proposal: $placeName.',
         error: error,
         stackTrace: stackTrace,
       );
+      if (!mounted) {
+        return;
+      }
+
+      _isSubmitting.value = false;
       messenger.showSnackBar(
         const SnackBar(content: Text('Impossible d’envoyer la proposition.')),
       );
     }
+  }
+}
+
+Future<void> _removeOrphanImage(LieuSupabaseSource source, String path) async {
+  try {
+    await source.removeImage(path);
+  } on Object catch (error, stackTrace) {
+    logger.e(
+      'Failed to remove orphaned place image.',
+      error: error,
+      stackTrace: stackTrace,
+    );
   }
 }
 
