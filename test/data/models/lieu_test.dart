@@ -18,5 +18,33 @@ void main() {
 
       expect(map['id'], 'bu');
     });
+
+    test('stores validation flag', () {
+      final map = const Lieu(
+        nom: 'Autoroute',
+        description: '',
+        isValidated: false,
+      ).toMap();
+
+      expect(map['is_validated'], isFalse);
+    });
+  });
+
+  group('Lieu.fromMap', () {
+    test('defaults missing validation flag to true', () {
+      final lieu = Lieu.fromMap({'nom': 'BU', 'description': ''});
+
+      expect(lieu.isValidated, isTrue);
+    });
+
+    test('reads validation flag', () {
+      final lieu = Lieu.fromMap({
+        'nom': 'Autoroute',
+        'description': '',
+        'is_validated': false,
+      });
+
+      expect(lieu.isValidated, isFalse);
+    });
   });
 }

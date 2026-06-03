@@ -3,13 +3,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le_repere/data/models/lieu.dart';
+import 'package:le_repere/data/models/user_role.dart';
 import 'package:le_repere/data/models/utilisateur.dart';
 import 'package:le_repere/data/sources/auth_source.dart';
 import 'package:le_repere/data/sources/favoris_source.dart';
+import 'package:le_repere/data/sources/role_source.dart';
 import 'package:le_repere/pages/profil_page.dart';
 
 import '../support/fake_auth_source.dart';
 import '../support/fake_favoris_source.dart';
+import '../support/fake_role_source.dart';
 import '../support/fake_utilisateur_source.dart';
 
 void main() {
@@ -108,17 +111,43 @@ void main() {
 
     expect(auth.signOutCount, 1);
   });
+
+  testWidgets('hides moderation tools for standard users', (tester) async {
+    final role = FakeRoleSource(role: UserRole.utilisateur);
+    addTearDown(role.dispose);
+
+    await tester.pumpWidget(
+      _buildPage(Stream.value(utilisateur), roleSource: role),
+    );
+    await tester.pump();
+
+    expect(find.text('Valider les propositions'), findsNothing);
+  });
+
+  testWidgets('shows moderation tools for moderators', (tester) async {
+    final role = FakeRoleSource(role: UserRole.moderateur);
+    addTearDown(role.dispose);
+
+    await tester.pumpWidget(
+      _buildPage(Stream.value(utilisateur), roleSource: role),
+    );
+    await tester.pump();
+
+    expect(find.text('Valider les propositions'), findsOneWidget);
+  });
 }
 
 Widget _buildPage(
   Stream<Utilisateur?> stream, {
   AuthSource? authSource,
+  RoleSource? roleSource,
   FavorisSource? favorisSource,
 }) {
   return MaterialApp(
     home: ProfilPage(
       authSource: authSource ?? FakeAuthSource(),
       utilisateurSource: FakeUtilisateurSource(stream),
+      roleSource: roleSource ?? FakeRoleSource(),
       favorisSource: favorisSource ?? FakeFavorisSource(),
     ),
   );

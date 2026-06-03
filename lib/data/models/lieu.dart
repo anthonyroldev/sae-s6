@@ -63,6 +63,7 @@ class Lieu {
   final Duration? heureFermeture;
   final String imageUrl;
   final LieuCategorie categorie;
+  final bool isValidated;
 
   /// Creates a campus place.
   const Lieu({
@@ -72,6 +73,7 @@ class Lieu {
     this.latitude = 0,
     this.longitude = 0,
     this.categorie = LieuCategorie.services,
+    this.isValidated = true,
     this.heureOuverture,
     this.heureFermeture,
     String? photo,
@@ -92,6 +94,11 @@ class Lieu {
         map['image_url'] ?? map['photo'] ?? map['imageUrl'],
       ),
       categorie: LieuCategorie.fromValue(map['categorie']),
+      isValidated: map.containsKey('is_validated')
+          ? SupabaseDataConverter.toBool(map['is_validated'])
+          : map.containsKey('isValidated')
+          ? SupabaseDataConverter.toBool(map['isValidated'])
+          : true,
     );
   }
 
@@ -107,6 +114,7 @@ class Lieu {
       'heure_fermeture': SupabaseDataConverter.formatTimeOfDay(heureFermeture),
       'image_url': imageUrl,
       'categorie': categorie.value,
+      'is_validated': isValidated,
     };
   }
 
@@ -121,6 +129,7 @@ class Lieu {
     Duration? heureFermeture,
     String? imageUrl,
     LieuCategorie? categorie,
+    bool? isValidated,
   }) {
     return Lieu(
       id: id ?? this.id,
@@ -132,6 +141,7 @@ class Lieu {
       heureFermeture: heureFermeture ?? this.heureFermeture,
       imageUrl: imageUrl ?? this.imageUrl,
       categorie: categorie ?? this.categorie,
+      isValidated: isValidated ?? this.isValidated,
     );
   }
 
