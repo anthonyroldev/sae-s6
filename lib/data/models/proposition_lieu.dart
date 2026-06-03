@@ -71,22 +71,39 @@ class PropositionLieu {
 
   /// Creates a proposal from a Supabase row.
   factory PropositionLieu.fromMap(Map<String, dynamic> map) {
+    final lieuMap = map['lieux'] is Map<String, dynamic>
+        ? map['lieux'] as Map<String, dynamic>
+        : const <String, dynamic>{};
     return PropositionLieu(
       id: SupabaseDataConverter.toInt(
         map['id_proposition'] ?? map['idProposition'],
       ),
-      nom: SupabaseDataConverter.toStringValue(map['nom']),
-      description: SupabaseDataConverter.toStringValue(map['description']),
-      latitude: SupabaseDataConverter.toDouble(map['latitude']),
-      longitude: SupabaseDataConverter.toDouble(map['longitude']),
-      heureOuverture: SupabaseDataConverter.toTimeOfDay(map['heure_ouverture']),
-      heureFermeture: SupabaseDataConverter.toTimeOfDay(map['heure_fermeture']),
-      imageUrl: SupabaseDataConverter.toStringValue(
-        map['image_url'] ?? map['imageUrl'],
+      nom: SupabaseDataConverter.toStringValue(map['nom'] ?? lieuMap['nom']),
+      description: SupabaseDataConverter.toStringValue(
+        map['description'] ?? lieuMap['description'],
       ),
-      categorie: LieuCategorie.fromValue(map['categorie']),
+      latitude: SupabaseDataConverter.toDouble(
+        map['latitude'] ?? lieuMap['latitude'],
+      ),
+      longitude: SupabaseDataConverter.toDouble(
+        map['longitude'] ?? lieuMap['longitude'],
+      ),
+      heureOuverture: SupabaseDataConverter.toTimeOfDay(
+        map['heure_ouverture'] ?? lieuMap['heure_ouverture'],
+      ),
+      heureFermeture: SupabaseDataConverter.toTimeOfDay(
+        map['heure_fermeture'] ?? lieuMap['heure_fermeture'],
+      ),
+      imageUrl: SupabaseDataConverter.toStringValue(
+        map['image_url'] ?? map['imageUrl'] ?? lieuMap['image_url'],
+      ),
+      categorie: LieuCategorie.fromValue(
+        map['categorie'] ?? lieuMap['categorie'],
+      ),
       statut: PropositionStatut.fromValue(map['statut']),
-      idLieu: SupabaseDataConverter.toStringValue(map['id_lieu'] ?? map['idLieu']),
+      idLieu: SupabaseDataConverter.toStringValue(
+        map['id_lieu'] ?? map['idLieu'],
+      ),
       idUtilisateur: SupabaseDataConverter.toStringValue(
         map['id_utilisateur'] ?? map['idUtilisateur'],
       ),
@@ -98,20 +115,46 @@ class PropositionLieu {
 
   /// Insert payload for a new proposal.
   ///
-  /// Server-managed columns (`id_proposition`, `statut`, `id_lieu`,
-  /// `id_administrateur`, `created_at`) are omitted; the client cannot set them.
+  /// Place columns live in `lieux`; the proposal table only stores the join and status.
   Map<String, dynamic> toInsertMap() {
     return {
-      'nom': nom,
-      'description': description,
-      'latitude': latitude,
-      'longitude': longitude,
-      'heure_ouverture': SupabaseDataConverter.formatTimeOfDay(heureOuverture),
-      'heure_fermeture': SupabaseDataConverter.formatTimeOfDay(heureFermeture),
-      'image_url': imageUrl,
-      'categorie': categorie.value,
+      if (idLieu.isNotEmpty) 'id_lieu': idLieu,
       if (idUtilisateur.isNotEmpty) 'id_utilisateur': idUtilisateur,
     };
+  }
+
+  /// Candidate place row linked by [idLieu].
+  Lieu toLieu() {
+    return Lieu(
+      nom: nom,
+      description: description,
+      latitude: latitude,
+      longitude: longitude,
+      heureOuverture: heureOuverture,
+      heureFermeture: heureFermeture,
+      imageUrl: imageUrl,
+      categorie: categorie,
+      isValidated: false,
+    );
+  }
+
+  /// Copies this proposal with a database place id.
+  PropositionLieu copyWithIdLieu(String idLieu) {
+    return PropositionLieu(
+      id: id,
+      nom: nom,
+      description: description,
+      latitude: latitude,
+      longitude: longitude,
+      heureOuverture: heureOuverture,
+      heureFermeture: heureFermeture,
+      imageUrl: imageUrl,
+      categorie: categorie,
+      statut: statut,
+      idLieu: idLieu,
+      idUtilisateur: idUtilisateur,
+      idAdministrateur: idAdministrateur,
+    );
   }
 
   /// Opening hours label used by moderation cards.

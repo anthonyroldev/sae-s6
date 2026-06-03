@@ -8,6 +8,7 @@ import '../core/constants/app_spacing.dart';
 import '../core/utils/logger.dart';
 import '../data/models/lieu.dart';
 import '../data/models/proposition_lieu.dart';
+import '../data/sources/lieu_supabase_source.dart';
 import '../data/sources/proposition_source.dart';
 import '../data/sources/proposition_supabase_source.dart';
 
@@ -29,8 +30,13 @@ class AddLieuPage extends StatefulWidget {
   final PropositionSource propositionSource;
 
   /// Creates the add place page.
-  AddLieuPage({super.key, PropositionSource? propositionSource})
-    : propositionSource = propositionSource ?? PropositionSupabaseSource();
+  AddLieuPage({
+    super.key,
+    PropositionSource? propositionSource,
+    this.initialLatitude,
+    this.initialLongitude,
+    this.lieuSource,
+  }) : propositionSource = propositionSource ?? PropositionSupabaseSource();
 
   @override
   State<AddLieuPage> createState() => _AddLieuPageState();

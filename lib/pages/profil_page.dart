@@ -13,8 +13,8 @@ import '../data/sources/role_source.dart';
 import '../data/sources/role_supabase_source.dart';
 import '../data/sources/utilisateur_source.dart';
 import '../data/sources/utilisateur_supabase_source.dart';
-import 'feed/place_card.dart';
 import 'admin/moderation_propositions_page.dart';
+import 'feed/place_card.dart';
 import 'profil/profile_header.dart';
 
 /// Profile screen backed by the authenticated Supabase user.
@@ -40,7 +40,7 @@ class ProfilPage extends StatelessWidget {
     FavorisSource? favorisSource,
   }) : authSource = authSource ?? AuthSupabaseSource(),
        utilisateurSource = utilisateurSource ?? UtilisateurSupabaseSource(),
-       favorisSource = favorisSource ?? FavorisSupabaseSource();
+       favorisSource = favorisSource ?? FavorisSupabaseSource(),
        roleSource = roleSource ?? RoleSupabaseSource();
 
   @override

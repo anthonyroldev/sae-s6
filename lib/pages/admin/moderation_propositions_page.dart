@@ -13,10 +13,10 @@ import '../../data/sources/role_supabase_source.dart';
 /// Reachable only by moderators and administrators. Each proposal can be
 /// validated (publishes the place) or rejected.
 class ModerationPropositionsPage extends StatefulWidget {
-  /// Proposal backend (injected for testing).
+  /// Proposal backend
   final PropositionSource propositionSource;
 
-  /// Role backend, used to guard access (injected for testing).
+  /// Role backend, used to guard access
   final RoleSource roleSource;
 
   /// Creates the moderation page.

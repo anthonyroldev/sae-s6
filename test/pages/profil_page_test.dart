@@ -2,18 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:le_repere/data/models/user_role.dart';
 import 'package:le_repere/data/models/lieu.dart';
+import 'package:le_repere/data/models/user_role.dart';
 import 'package:le_repere/data/models/utilisateur.dart';
 import 'package:le_repere/data/sources/auth_source.dart';
 import 'package:le_repere/data/sources/favoris_source.dart';
 import 'package:le_repere/data/sources/role_source.dart';
-import 'package:le_repere/data/sources/favoris_source.dart';
 import 'package:le_repere/pages/profil_page.dart';
 
 import '../support/fake_auth_source.dart';
-import '../support/fake_role_source.dart';
 import '../support/fake_favoris_source.dart';
+import '../support/fake_role_source.dart';
 import '../support/fake_utilisateur_source.dart';
 
 void main() {

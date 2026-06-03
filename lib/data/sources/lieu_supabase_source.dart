@@ -21,7 +21,12 @@ class LieuSupabaseSource {
         .from(_table)
         .stream(primaryKey: ['id'])
         .order('nom')
-        .map((rows) => rows.map(Lieu.fromMap).toList());
+        .map(
+          (rows) => rows
+              .map(Lieu.fromMap)
+              .where((lieu) => lieu.isValidated)
+              .toList(growable: false),
+        );
   }
 
   /// Creates a campus place.
