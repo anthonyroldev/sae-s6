@@ -494,7 +494,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
         dateFinPrestation: _isPermanent.value
             ? null
             : (_dateFinPrestation.value ??
-                DateTime.now().add(const Duration(days: 30))),
+                  DateTime.now().add(const Duration(days: 30))),
         imageUrl: uploadedImage?.url ?? '',
       );
 
