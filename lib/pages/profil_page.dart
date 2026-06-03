@@ -16,8 +16,6 @@ import '../data/sources/utilisateur_supabase_source.dart';
 import '../core/utils/logger.dart';
 import 'feed/place_category_icon.dart';
 import 'admin/moderation_propositions_page.dart';
-import 'feed/place_card.dart';
-import 'lieu_detail_page.dart';
 import 'profil/profile_header.dart';
 
 /// Profile screen backed by the authenticated Supabase user.
