@@ -5,6 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../core/constants/app_colors.dart';
+import '../core/constants/app_spacing.dart';
 import '../core/utils/logger.dart';
 import '../data/models/lieu.dart';
 import '../data/sources/geolocator_location_source.dart';
@@ -12,6 +13,9 @@ import '../data/sources/lieu_supabase_source.dart';
 import '../data/sources/location_access_exception.dart';
 import '../data/sources/location_source.dart';
 import 'add_lieu_page.dart';
+import 'feed/place_category_icon.dart';
+import 'feed/status_badge.dart';
+import 'lieu_detail_page.dart';
 
 /// Campus map page.
 class MapPage extends StatefulWidget {
@@ -38,6 +42,7 @@ class _MapPageState extends State<MapPage> {
   late final Stream<List<Lieu>> _lieuxStream;
   StreamSubscription<LatLng>? _positionSubscription;
   LatLng? _userPosition;
+  Lieu? _selectedPlace;
   bool _hasCenteredOnUser = false;
 
   @override
@@ -70,6 +75,7 @@ class _MapPageState extends State<MapPage> {
           }
 
           final places = snapshot.hasData ? snapshot.data! : const <Lieu>[];
+          final selectedPlace = _selectedPlace;
           final markers = places
               .where(_hasValidCoordinates)
               .map(_buildMarker)
@@ -106,6 +112,11 @@ class _MapPageState extends State<MapPage> {
                       ),
                     ),
                   ),
+                ),
+              if (selectedPlace != null)
+                _SelectedPlacePanel(
+                  place: selectedPlace,
+                  onDetailsPressed: () => _openPlaceDetails(selectedPlace),
                 ),
             ],
           );
@@ -171,32 +182,199 @@ class _MapPageState extends State<MapPage> {
       ),
       width: 96,
       height: 64,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.location_pin, color: Colors.red, size: 40),
-          Text(
-            place.nom,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary,
+      child: GestureDetector(
+        key: Key('place-marker-${place.id}'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => setState(() => _selectedPlace = place),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.location_pin, color: Colors.red, size: 40),
+            Text(
+              place.nom,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   void _openAddLieuPage(LatLng point) {
+    setState(() => _selectedPlace = null);
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => AddLieuPage(
           initialLatitude: point.latitude,
           initialLongitude: point.longitude,
+        ),
+      ),
+    );
+  }
+
+  void _openPlaceDetails(Lieu place) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => LieuDetailPage(lieu: place),
+      ),
+    );
+  }
+}
+
+class _SelectedPlacePanel extends StatelessWidget {
+  final Lieu place;
+  final VoidCallback onDetailsPressed;
+
+  const _SelectedPlacePanel({
+    required this.place,
+    required this.onDetailsPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
+
+    return Positioned(
+      left: AppSpacing.md,
+      right: AppSpacing.md,
+      bottom: AppSpacing.md + bottomPadding,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: const [
+            BoxShadow(
+              color: AppColors.cardShadow,
+              blurRadius: 16,
+              offset: Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _PlaceThumbnail(place: place),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                place.nom,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppColors.primary,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.25,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            StatusBadge(isOpen: place.isOpen),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          place.categorie.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            height: 1.3,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          place.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.secondaryText,
+                            fontSize: 14,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: onDetailsPressed,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: AppColors.surface,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.sm + 6,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                  child: const Text(
+                    'Voir les détails',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PlaceThumbnail extends StatelessWidget {
+  final Lieu place;
+
+  const _PlaceThumbnail({required this.place});
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: SizedBox.square(
+        dimension: 66,
+        child: Image.network(
+          place.imageUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => ColoredBox(
+            color: AppColors.surfaceVariant,
+            child: Icon(
+              iconForCategory(place.categorie),
+              color: AppColors.secondaryText,
+              size: 32,
+            ),
+          ),
         ),
       ),
     );
