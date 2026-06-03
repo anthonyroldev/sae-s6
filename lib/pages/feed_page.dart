@@ -16,16 +16,24 @@ import 'lieu_detail_page.dart';
 class FeedPage extends StatefulWidget {
   static const _filters = LieuCategorie.values;
 
+  /// Source of campus places. Injected in tests.
+  final LieuSupabaseSource? lieuSource;
+
+  /// Source of favorite places. Injected in tests.
+  final FavorisSource? favorisSource;
+
   /// Creates the home feed page.
-  const FeedPage({super.key});
+  const FeedPage({super.key, this.lieuSource, this.favorisSource});
 
   @override
   State<FeedPage> createState() => _FeedPageState();
 }
 
 class _FeedPageState extends State<FeedPage> {
-  final _lieuSource = LieuSupabaseSource();
-  final _favorisSource = FavorisSupabaseSource();
+  late final LieuSupabaseSource _lieuSource =
+      widget.lieuSource ?? LieuSupabaseSource();
+  late final FavorisSource _favorisSource =
+      widget.favorisSource ?? FavorisSupabaseSource();
   final _searchController = TextEditingController();
   final _searchQuery = ValueNotifier<String>('');
   final _selectedCategory = ValueNotifier<LieuCategorie>(LieuCategorie.all);

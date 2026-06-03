@@ -80,7 +80,7 @@ lib/
 |   |-- models/              # Supabase row models and serializers
 |   `-- sources/             # Supabase Auth/Postgres/Realtime access
 |-- pages/
-|   |-- auth/                # OTP authentication flow
+|   |-- auth/                # email/password authentication flow
 |   |-- feed/                # feed widgets
 |   `-- profil/              # profile widgets
 `-- main.dart                # Supabase initialization + app root
@@ -94,15 +94,17 @@ or Riverpod providers unless the architecture is explicitly migrated first.
 ## Implemented Features
 
 - Splash screen.
-- Email OTP login and signup.
+- Email and password login and signup.
 - Signup restricted to institutional email domains.
 - Auth session gate and logout.
+- User roles (utilisateur, moderateur, association, admin) carried in the JWT.
 - Realtime campus place feed.
 - Feed search and category filters.
-- Add-place form with validation.
+- Favorite places (add/remove, per user).
+- Add-place form with validation and optional image upload.
 - Device geolocation for place coordinates.
 - Campus map with place markers.
-- Profile screen with placeholder favorites and reviews.
+- Profile screen.
 
 ---
 
@@ -138,32 +140,47 @@ accepted for compatibility.
 ### Auth
 
 - Provider: Supabase Auth (`GoTrue`).
-- Flow: `signInWithOtp` then `verifyOTP`.
-- OTP type: email.
-- OTP length expected by UI: 8 characters.
+- Flow: `signInWithPassword` for login, `signUp` (email + password) for signup.
+- Password: minimum 8 characters, enforced by the UI before the call.
+- Email confirmation must be disabled in Supabase (Auth > Providers > Email);
+  signup expects a session back immediately.
 - Signup writes or updates the profile row in `utilisateurs`.
 - User primary key: Supabase Auth user id (`auth.uid()`).
+- Role: delivered as the `user_role` JWT claim by the custom access token hook,
+  read client-side by `RoleSource`; changed only through the `set_user_role` RPC.
 
 ### Active Tables
 
 ```text
 lieux
-  id, nom, description, latitude, longitude, heure_ouverture, heure_fermeture, image_url, categorie
+  id (text, default gen_random_uuid()), nom, description, latitude, longitude,
+  heure_ouverture, heure_fermeture, image_url, categorie
 
 avis
-  id_avis, note, commentaire, created_at, id_lieu, id_utilisateur
+  id_avis, note (real, check 1..5), commentaire, created_at, id_lieu, id_utilisateur
 
 utilisateurs
-  id, nom, email, position_gps
+  id, nom, email, position_gps, role (user_role enum, default 'utilisateur')
+
+favoris
+  id_utilisateur, id_lieu   -- composite key, one row per favorited place
+
+associations
+  id_association, nom, description, contact
+
+propositions_lieu
+  id_proposition, statut, id_lieu, id_utilisateur, id_administrateur, created_at
 ```
 
 ### Sources
 
 ```text
-AuthSupabaseSource         # OTP auth, session stream, logout
-LieuSupabaseSource         # realtime watch + upsert
+AuthSupabaseSource         # email/password auth, session stream, logout
+LieuSupabaseSource         # realtime watch + insert + image upload/remove
 AvisSupabaseSource         # realtime watch by place + validated upsert
+FavorisSupabaseSource      # watch/add/remove the current user's favorites
 UtilisateurSupabaseSource  # watch/get/upsert profile
+RoleSource                 # reads the user_role JWT claim; set_user_role RPC
 ```
 
 ### Security

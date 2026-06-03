@@ -413,10 +413,10 @@ class _AddLieuPageState extends State<AddLieuPage> {
     }
   }
 
-  Future<String> _uploadSelectedImage(LieuSupabaseSource source) {
+  Future<UploadedImage?> _uploadSelectedImage(LieuSupabaseSource source) {
     final image = _selectedImage.value;
     if (image == null) {
-      return Future.value('');
+      return Future.value(null);
     }
 
     return source.uploadImage(
@@ -439,11 +439,9 @@ class _AddLieuPageState extends State<AddLieuPage> {
     final source = widget.lieuSource ?? LieuSupabaseSource();
     final placeName = _nomController.text.trim();
 
+    UploadedImage? uploadedImage;
     try {
-      final imageUrl = await _uploadSelectedImage(source);
-      if (!mounted) {
-        return;
-      }
+      uploadedImage = await _uploadSelectedImage(source);
 
       final lieu = Lieu(
         nom: placeName,
@@ -457,33 +455,54 @@ class _AddLieuPageState extends State<AddLieuPage> {
         categorie: _selectedCategory.value,
         heureOuverture: _toDuration(_heureOuverture.value),
         heureFermeture: _toDuration(_heureFermeture.value),
-        imageUrl: imageUrl,
+        imageUrl: uploadedImage?.url ?? '',
       );
 
       await source.save(lieu);
+      logger.i('Place added successfully: $placeName.');
       if (!mounted) {
         return;
       }
 
       _isSubmitting.value = false;
-      logger.i('Place added successfully: $placeName.');
       messenger.showSnackBar(
         const SnackBar(content: Text('Lieu ajouté avec succès.')),
       );
       navigator.pop();
     } on Object catch (error, stackTrace) {
-      if (!mounted) {
-        return;
+      // The image is uploaded before the row is saved; if the save fails, drop
+      // the orphaned file so storage does not accumulate dangling images.
+      if (uploadedImage != null) {
+        await _removeOrphanImage(source, uploadedImage.path);
       }
 
-      _isSubmitting.value = false;
       logger.e(
         'Failed to add place: $placeName.',
         error: error,
         stackTrace: stackTrace,
       );
+      if (!mounted) {
+        return;
+      }
+
+      _isSubmitting.value = false;
       messenger.showSnackBar(
         const SnackBar(content: Text('Impossible d’ajouter le lieu.')),
+      );
+    }
+  }
+
+  Future<void> _removeOrphanImage(
+    LieuSupabaseSource source,
+    String path,
+  ) async {
+    try {
+      await source.removeImage(path);
+    } on Object catch (error, stackTrace) {
+      logger.e(
+        'Failed to remove orphaned place image.',
+        error: error,
+        stackTrace: stackTrace,
       );
     }
   }
