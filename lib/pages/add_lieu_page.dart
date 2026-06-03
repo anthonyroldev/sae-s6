@@ -499,13 +499,13 @@ class _AddLieuPageState extends State<AddLieuPage> {
       );
     }
   }
+}
 
-  Duration? _toDuration(TimeOfDay? time) {
-    if (time == null) {
-      return null;
-    }
-    return Duration(hours: time.hour, minutes: time.minute);
+Duration? _toDuration(TimeOfDay? time) {
+  if (time == null) {
+    return null;
   }
+  return Duration(hours: time.hour, minutes: time.minute);
 }
 
 class _PickedImage {

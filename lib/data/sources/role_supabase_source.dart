@@ -14,6 +14,7 @@ class RoleSupabaseSource implements RoleSource {
   static const _claim = 'user_role';
 
   final SupabaseClient _client;
+  UserRole? _cachedRole;
 
   /// Creates a Supabase role source.
   RoleSupabaseSource({SupabaseClient? client})
@@ -21,12 +22,16 @@ class RoleSupabaseSource implements RoleSource {
 
   @override
   UserRole get currentRole =>
+      _cachedRole ??
       roleFromAccessToken(_client.auth.currentSession?.accessToken);
 
   @override
-  Stream<UserRole> get roleChanges => _client.auth.onAuthStateChange.map(
-    (state) => roleFromAccessToken(state.session?.accessToken),
-  );
+  Stream<UserRole> get roleChanges async* {
+    yield await _resolveCurrentRole(_client.auth.currentSession);
+    await for (final state in _client.auth.onAuthStateChange) {
+      yield await _resolveCurrentRole(state.session);
+    }
+  }
 
   @override
   Future<void> setUserRole({required String userId, required UserRole role}) {
@@ -64,5 +69,28 @@ class RoleSupabaseSource implements RoleSource {
       return null;
     }
     return null;
+  }
+
+  Future<UserRole> _resolveCurrentRole(Session? session) async {
+    final userId = session?.user.id;
+    if (userId == null) {
+      return _cacheRole(UserRole.utilisateur);
+    }
+
+    try {
+      final row = await _client
+          .from('utilisateurs')
+          .select('role')
+          .eq('id', userId)
+          .maybeSingle();
+      return _cacheRole(UserRole.fromValue(row?['role']));
+    } on Object {
+      return _cacheRole(roleFromAccessToken(session?.accessToken));
+    }
+  }
+
+  UserRole _cacheRole(UserRole role) {
+    _cachedRole = role;
+    return role;
   }
 }
