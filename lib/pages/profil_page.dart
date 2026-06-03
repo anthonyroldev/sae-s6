@@ -11,6 +11,7 @@ import '../data/sources/favoris_supabase_source.dart';
 import '../data/sources/utilisateur_source.dart';
 import '../data/sources/utilisateur_supabase_source.dart';
 import 'feed/place_card.dart';
+import 'lieu_detail_page.dart';
 import 'profil/profile_header.dart';
 
 /// Profile screen backed by the authenticated Supabase user.
@@ -148,7 +149,14 @@ class _FavoritePlacesList extends StatelessWidget {
         return Column(
           children: [
             for (var index = 0; index < places.length; index++) ...[
-              PlaceCard(place: places[index]),
+              PlaceCard(
+                place: places[index],
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => LieuDetailPage(lieu: places[index]),
+                  ),
+                ),
+              ),
               if (index < places.length - 1)
                 const SizedBox(height: AppSpacing.md),
             ],
