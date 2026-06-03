@@ -16,12 +16,16 @@ class PlaceCard extends StatelessWidget {
   /// Called when the favorite button is pressed.
   final VoidCallback? onFavoritePressed;
 
+  /// Called when the card is tapped.
+  final VoidCallback? onTap;
+
   /// Creates a place card.
   const PlaceCard({
     super.key,
     required this.place,
     this.isFavorite = false,
     this.onFavoritePressed,
+    this.onTap,
   });
 
   @override
@@ -40,78 +44,86 @@ class PlaceCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            PlaceImage(place: place),
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                PlaceImage(place: place),
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          place.nom,
-                          style: const TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            height: 1.3,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              place.nom,
+                              style: const TextStyle(
+                                color: AppColors.primary,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                height: 1.3,
+                              ),
+                            ),
                           ),
-                        ),
+                          if (onFavoritePressed != null)
+                            IconButton(
+                              onPressed: onFavoritePressed,
+                              tooltip: isFavorite
+                                  ? 'Retirer des favoris'
+                                  : 'Ajouter aux favoris',
+                              icon: Icon(
+                                isFavorite
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color: isFavorite
+                                    ? AppColors.errorText
+                                    : AppColors.secondaryText,
+                              ),
+                            ),
+                        ],
                       ),
-                      if (onFavoritePressed != null)
-                        IconButton(
-                          onPressed: onFavoritePressed,
-                          tooltip: isFavorite
-                              ? 'Retirer des favoris'
-                              : 'Ajouter aux favoris',
-                          icon: Icon(
-                            isFavorite ? Icons.favorite : Icons.favorite_border,
-                            color: isFavorite
-                                ? AppColors.errorText
-                                : AppColors.secondaryText,
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    place.description,
-                    style: const TextStyle(
-                      color: Color(0xFF45464D),
-                      fontSize: 16,
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.schedule,
-                        color: AppColors.secondaryText,
-                        size: 16,
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
-                        place.heures.isEmpty
-                            ? 'Horaires non renseignés'
-                            : place.heures,
+                        place.description,
                         style: const TextStyle(
-                          color: AppColors.secondaryText,
-                          fontSize: 14,
-                          height: 1.4,
+                          color: Color(0xFF45464D),
+                          fontSize: 16,
+                          height: 1.5,
                         ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.schedule,
+                            color: AppColors.secondaryText,
+                            size: 16,
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          Text(
+                            place.heures.isEmpty
+                                ? 'Horaires non renseignés'
+                                : place.heures,
+                            style: const TextStyle(
+                              color: AppColors.secondaryText,
+                              fontSize: 14,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

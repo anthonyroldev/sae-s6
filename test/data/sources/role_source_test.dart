@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le_repere/data/models/user_role.dart';
-import 'package:le_repere/data/sources/role_source.dart';
+import 'package:le_repere/data/sources/role_supabase_source.dart';
 
 /// Builds a minimal (unsigned) JWT carrying [payload] as its claims.
 String _fakeJwt(Map<String, dynamic> payload) {
@@ -14,32 +14,32 @@ String _fakeJwt(Map<String, dynamic> payload) {
 }
 
 void main() {
-  group('RoleSource.roleFromAccessToken', () {
+  group('RoleSupabaseSource.roleFromAccessToken', () {
     test('reads the user_role claim', () {
       final token = _fakeJwt({'sub': 'abc', 'user_role': 'admin'});
-      expect(RoleSource.roleFromAccessToken(token), UserRole.admin);
+      expect(RoleSupabaseSource.roleFromAccessToken(token), UserRole.admin);
     });
 
     test('reads each known role', () {
       for (final role in UserRole.values) {
         final token = _fakeJwt({'user_role': role.value});
-        expect(RoleSource.roleFromAccessToken(token), role);
+        expect(RoleSupabaseSource.roleFromAccessToken(token), role);
       }
     });
 
     test('defaults to utilisateur when the claim is absent', () {
       final token = _fakeJwt({'sub': 'abc'});
-      expect(RoleSource.roleFromAccessToken(token), UserRole.utilisateur);
+      expect(RoleSupabaseSource.roleFromAccessToken(token), UserRole.utilisateur);
     });
 
     test('defaults to utilisateur for a null token', () {
-      expect(RoleSource.roleFromAccessToken(null), UserRole.utilisateur);
+      expect(RoleSupabaseSource.roleFromAccessToken(null), UserRole.utilisateur);
     });
 
     test('defaults to utilisateur for a malformed token', () {
-      expect(RoleSource.roleFromAccessToken('not-a-jwt'), UserRole.utilisateur);
+      expect(RoleSupabaseSource.roleFromAccessToken('not-a-jwt'), UserRole.utilisateur);
       expect(
-        RoleSource.roleFromAccessToken('only.two'),
+        RoleSupabaseSource.roleFromAccessToken('only.two'),
         UserRole.utilisateur,
       );
     });

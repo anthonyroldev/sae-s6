@@ -7,7 +7,8 @@ insert into public.lieux (
   heure_ouverture,
   heure_fermeture,
   image_url,
-  categorie
+  categorie,
+  is_validated
 )
 values
   (
@@ -19,7 +20,8 @@ values
     '00:00',
     '00:00',
     'https://lh3.googleusercontent.com/gps-cs-s/APNQkAErTV6pIvnUuTahu-6euLk9Ch3rxHh2-oY4uQEBcFIzK1vMIzCEMx47wbH0f58A4VKG0u13vvIZbBi6IhcPdTRZQIhQAJSp00Ej_gZNHKheX_jMrqscxKa91rweJGNxZErXrTYw=s1360-w1360-h1020-rw',
-    'sport'
+    'sport',
+    true
   ),
   (
     'le-sphimx',
@@ -30,7 +32,8 @@ values
     '08:45',
     '19:30',
     'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTLotmnSqenxqEuyybUycet04cRqKP9biHfjQ&s',
-    'associations'
+    'associations',
+    true
   ),
   (
     '1',
@@ -41,7 +44,8 @@ values
     '11:15',
     '13:30',
     '',
-    'repas'
+    'repas',
+    true
   )
 on conflict (id) do update
 set
@@ -52,4 +56,5 @@ set
   heure_ouverture = excluded.heure_ouverture,
   heure_fermeture = excluded.heure_fermeture,
   image_url = excluded.image_url,
-  categorie = excluded.categorie;
+  categorie = excluded.categorie,
+  is_validated = excluded.is_validated;

@@ -11,6 +11,7 @@ import 'add_lieu_page.dart';
 import 'feed/home_header.dart';
 import 'feed/place_card.dart';
 import 'feed/search_header_delegate.dart';
+import 'lieu_detail_page.dart';
 
 class FeedPage extends StatefulWidget {
   static const _filters = LieuCategorie.values;
@@ -170,6 +171,11 @@ class _FeedPageState extends State<FeedPage> {
                     return PlaceCard(
                       place: place,
                       isFavorite: isFavorite,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => LieuDetailPage(lieu: place),
+                        ),
+                      ),
                       onFavoritePressed: () {
                         _setFavorite(
                           favorisSource: favorisSource,
@@ -204,7 +210,7 @@ class _FeedPageState extends State<FeedPage> {
   void _openAddLieuPage() {
     Navigator.of(
       context,
-    ).push(MaterialPageRoute<void>(builder: (_) => const AddLieuPage()));
+    ).push(MaterialPageRoute<void>(builder: (_) => AddLieuPage()));
   }
 
   Future<void> _setFavorite({
