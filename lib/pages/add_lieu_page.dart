@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
@@ -469,7 +470,6 @@ class _AddLieuPageState extends State<AddLieuPage> {
         imageUrl: imageUrl,
       );
 
-    try {
       await widget.propositionSource.soumettre(proposition);
       if (!mounted) {
         return;
@@ -490,7 +490,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
 
       _isSubmitting.value = false;
       logger.e(
-        'Failed to submit place proposal: ${proposition.nom}.',
+        'Failed to submit place proposal: $placeName.',
         error: error,
         stackTrace: stackTrace,
       );
