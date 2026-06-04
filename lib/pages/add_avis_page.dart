@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
+import '../core/notifications/local_review_notification_source.dart';
+import '../core/notifications/review_notification_source.dart';
 import '../core/utils/logger.dart';
 import '../data/models/avis.dart';
 import '../data/models/lieu.dart';
@@ -18,9 +20,18 @@ class AddAvisPage extends StatefulWidget {
   /// Review backend.
   final AvisSource avisSource;
 
+  /// Local review status notifications.
+  final ReviewNotificationSource notificationSource;
+
   /// Creates the add review page.
-  AddAvisPage({super.key, required this.lieu, AvisSource? avisSource})
-    : avisSource = avisSource ?? AvisSupabaseSource();
+  AddAvisPage({
+    super.key,
+    required this.lieu,
+    AvisSource? avisSource,
+    ReviewNotificationSource? notificationSource,
+  }) : avisSource = avisSource ?? AvisSupabaseSource(),
+       notificationSource =
+           notificationSource ?? LocalReviewNotificationSource.instance;
 
   @override
   State<AddAvisPage> createState() => _AddAvisPageState();
@@ -92,7 +103,11 @@ class _AddAvisPageState extends State<AddAvisPage> {
 
   Future<void> _moderate(Avis avis) async {
     try {
-      await widget.avisSource.moderateReview(avis);
+      final status = await widget.avisSource.moderateReview(avis);
+      await widget.notificationSource.showReviewStatus(
+        reviewId: avis.idAvis,
+        status: status,
+      );
     } on Object catch (error, stackTrace) {
       logger.e(
         'Failed to start avis moderation',

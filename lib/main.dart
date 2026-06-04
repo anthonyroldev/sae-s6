@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:le_repere/core/constants/app_colors.dart';
+import 'package:le_repere/core/notifications/local_review_notification_source.dart';
 import 'package:le_repere/pages/splash_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -22,6 +23,8 @@ void main() async {
   );
 
   await Supabase.initialize(url: _supabaseUrl, anonKey: _supabaseAnonKey);
+  await LocalReviewNotificationSource.instance.initialize();
+  await LocalReviewNotificationSource.instance.requestPermissions();
 
   runApp(const MainApp());
 }

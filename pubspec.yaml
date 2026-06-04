@@ -17,6 +17,7 @@ dependencies:
   logger: ^2.7.0
   image_picker: ^1.2.2
   url_launcher: ^6.3.2
+  flutter_local_notifications: 21.0.0
 
 dev_dependencies:
   flutter_test:
