@@ -46,7 +46,11 @@ Future<void> _showQueueItem(
 ) async {
   await tester.pump();
   await tester.pump();
-  await tester.ensureVisible(finder);
+  await tester.scrollUntilVisible(
+    finder,
+    400,
+    scrollable: find.byType(Scrollable).first,
+  );
   await tester.pump();
 }
 
