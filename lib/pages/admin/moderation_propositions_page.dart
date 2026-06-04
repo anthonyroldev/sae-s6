@@ -255,7 +255,7 @@ class _MetricsContent extends StatelessWidget {
               crossAxisCount: isWide ? 3 : 2,
               crossAxisSpacing: AppSpacing.sm,
               mainAxisSpacing: AppSpacing.sm,
-              childAspectRatio: isWide ? 1.65 : 1.35,
+              childAspectRatio: isWide ? 1.35 : 1.05,
               children: [
                 _MetricCard(
                   icon: Icons.place_outlined,
