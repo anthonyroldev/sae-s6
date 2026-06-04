@@ -14,6 +14,7 @@ class Utilisateur {
   /// Application role. Server-managed: read from the row but never written by
   /// the client (see [toMap]).
   final UserRole role;
+  final bool geolocalisation;
 
   /// Creates an app user.
   const Utilisateur({
@@ -22,6 +23,7 @@ class Utilisateur {
     required this.email,
     required this.positionGps,
     this.role = UserRole.utilisateur,
+    this.geolocalisation = false,
   });
 
   /// Creates a user from a Supabase row.
@@ -34,6 +36,7 @@ class Utilisateur {
         map['position_gps'] ?? map['positionGPS'] ?? map['positionGps'],
       ),
       role: UserRole.fromValue(map['role']),
+      geolocalisation: SupabaseDataConverter.toBool(map['geolocalisation']),
     );
   }
 
@@ -43,6 +46,6 @@ class Utilisateur {
   /// has no write privilege on that column. Use the `set_user_role` RPC (admins
   /// only) to change a role.
   Map<String, dynamic> toMap() {
-    return {'id': id, 'nom': nom, 'email': email, 'position_gps': positionGps};
+    return {'id': id, 'nom': nom, 'email': email, 'position_gps': positionGps, 'geolocalisation': geolocalisation,};
   }
 }
