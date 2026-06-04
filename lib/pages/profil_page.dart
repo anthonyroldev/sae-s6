@@ -428,7 +428,7 @@ class _FavoritePlaceCard extends StatelessWidget {
   }
 }
 
-/// Moderation entry point, shown only to moderators and administrators.
+/// Moderation entry point, shown only to administrators.
 class _ModerationButton extends StatelessWidget {
   final RoleSource roleSource;
 
@@ -441,7 +441,7 @@ class _ModerationButton extends StatelessWidget {
       stream: roleSource.roleChanges,
       builder: (context, snapshot) {
         final role = snapshot.data ?? UserRole.utilisateur;
-        if (!role.canModerate) {
+        if (!role.isAdmin) {
           return const SizedBox.shrink();
         }
         return Padding(

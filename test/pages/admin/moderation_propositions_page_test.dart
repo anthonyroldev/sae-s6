@@ -21,7 +21,7 @@ Widget _page(FakePropositionSource propositions, FakeRoleSource role) {
 }
 
 void main() {
-  testWidgets('denies access to non-moderators', (tester) async {
+  testWidgets('denies access to standard users', (tester) async {
     final propositions = FakePropositionSource();
     final role = FakeRoleSource(role: UserRole.utilisateur);
     addTearDown(propositions.dispose);
@@ -30,12 +30,24 @@ void main() {
     await tester.pumpWidget(_page(propositions, role));
     await tester.pump();
 
-    expect(find.text('Accès réservé aux modérateurs.'), findsOneWidget);
+    expect(find.text('Accès réservé aux administrateurs.'), findsOneWidget);
   });
 
-  testWidgets('lists pending proposals for a moderator', (tester) async {
+  testWidgets('denies access to moderators', (tester) async {
     final propositions = FakePropositionSource();
     final role = FakeRoleSource(role: UserRole.moderateur);
+    addTearDown(propositions.dispose);
+    addTearDown(role.dispose);
+
+    await tester.pumpWidget(_page(propositions, role));
+    await tester.pump();
+
+    expect(find.text('Accès réservé aux administrateurs.'), findsOneWidget);
+  });
+
+  testWidgets('lists pending proposals for an administrator', (tester) async {
+    final propositions = FakePropositionSource();
+    final role = FakeRoleSource(role: UserRole.admin);
     addTearDown(propositions.dispose);
     addTearDown(role.dispose);
 

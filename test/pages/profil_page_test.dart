@@ -146,8 +146,20 @@ void main() {
     expect(find.text('Valider les propositions'), findsNothing);
   });
 
-  testWidgets('shows moderation tools for moderators', (tester) async {
+  testWidgets('hides moderation tools for moderators', (tester) async {
     final role = FakeRoleSource(role: UserRole.moderateur);
+    addTearDown(role.dispose);
+
+    await tester.pumpWidget(
+      _buildPage(Stream.value(utilisateur), roleSource: role),
+    );
+    await tester.pump();
+
+    expect(find.text('Valider les propositions'), findsNothing);
+  });
+
+  testWidgets('shows moderation tools for administrators', (tester) async {
+    final role = FakeRoleSource(role: UserRole.admin);
     addTearDown(role.dispose);
 
     await tester.pumpWidget(

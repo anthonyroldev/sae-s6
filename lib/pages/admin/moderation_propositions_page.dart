@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../data/models/proposition_lieu.dart';
+import '../../data/models/user_role.dart';
 import '../../data/sources/proposition_source.dart';
 import '../../data/sources/proposition_supabase_source.dart';
 import '../../data/sources/role_source.dart';
@@ -10,8 +11,8 @@ import '../../data/sources/role_supabase_source.dart';
 
 /// Moderation screen listing pending place proposals.
 ///
-/// Reachable only by moderators and administrators. Each proposal can be
-/// validated (publishes the place) or rejected.
+/// Reachable only by administrators. Each proposal can be validated
+/// (publishes the place) or rejected.
 class ModerationPropositionsPage extends StatefulWidget {
   /// Proposal backend
   final PropositionSource propositionSource;
@@ -46,9 +47,17 @@ class _ModerationPropositionsPageState
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
-      body: widget.roleSource.currentRole.canModerate
-          ? _buildQueue()
-          : const _CenteredMessage('Accès réservé aux modérateurs.'),
+      body: StreamBuilder<UserRole>(
+        initialData: widget.roleSource.currentRole,
+        stream: widget.roleSource.roleChanges,
+        builder: (context, snapshot) {
+          final role = snapshot.data ?? UserRole.utilisateur;
+          if (!role.isAdmin) {
+            return const _CenteredMessage('Accès réservé aux administrateurs.');
+          }
+          return _buildQueue();
+        },
+      ),
     );
   }
 

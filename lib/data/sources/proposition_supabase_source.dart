@@ -53,7 +53,7 @@ class PropositionSupabaseSource implements PropositionSource {
         .from(_table)
         .update({
           'statut': PropositionStatut.validee.value,
-          'id_administrateur': ?userId,
+          'id_administrateur': userId,
         })
         .eq('id_proposition', id);
     if (idLieu != null && idLieu.isNotEmpty) {
@@ -71,7 +71,7 @@ class PropositionSupabaseSource implements PropositionSource {
         .from(_table)
         .update({
           'statut': PropositionStatut.refusee.value,
-          'id_administrateur': ?userId,
+          'id_administrateur': userId,
         })
         .eq('id_proposition', id);
   }
