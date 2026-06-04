@@ -49,8 +49,7 @@ export default {
           },
         ],
         reasoning: { enabled: false },
-        temperature: 0,
-        max_tokens: 2,
+        temperature: 0
       }),
     });
 
