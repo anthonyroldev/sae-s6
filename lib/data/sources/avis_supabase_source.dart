@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/utils/supabase_data_converter.dart';
 import '../models/avis.dart';
 import '../models/avis_with_auteur.dart';
 import 'avis_source.dart';
@@ -7,6 +8,7 @@ import 'avis_source.dart';
 /// Supabase source for place reviews.
 class AvisSupabaseSource implements AvisSource {
   static const _table = 'avis';
+  static const _authorsView = 'utilisateurs_public';
 
   final SupabaseClient _client;
 
@@ -42,22 +44,22 @@ class AvisSupabaseSource implements AvisSource {
 
     final userIds = avisList.map((a) => a.idUtilisateur).toSet().toList();
     final userRows = await _client
-        .from('utilisateurs')
+        .from(_authorsView)
         .select('id, nom')
         .inFilter('id', userIds);
     final nomById = {
       for (final r in userRows)
-        r['id'] as String: (r['nom'] as String?) ?? 'Anonyme',
+        SupabaseDataConverter.toStringValue(r['id']):
+            SupabaseDataConverter.toStringValue(r['nom']),
     };
 
-    return avisList
-        .map(
-          (a) => AvisWithAuteur(
-            avis: a,
-            nomAuteur: nomById[a.idUtilisateur] ?? 'Anonyme',
-          ),
-        )
-        .toList();
+    return avisList.map((a) {
+      final nomAuteur = nomById[a.idUtilisateur] ?? '';
+      return AvisWithAuteur(
+        avis: a,
+        nomAuteur: nomAuteur.isEmpty ? 'Anonyme' : nomAuteur,
+      );
+    }).toList();
   }
 
   /// Returns the average note and total review count for a place.
