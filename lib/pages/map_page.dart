@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
@@ -17,6 +19,19 @@ import 'feed/place_category_icon.dart';
 import 'feed/status_badge.dart';
 import 'lieu_detail_page.dart';
 
+/// Launches an external navigation URI.
+typedef NavigationLauncher = Future<bool> Function(
+  Uri uri, {
+  LaunchMode mode,
+});
+
+Future<bool> _defaultNavigationLauncher(
+  Uri uri, {
+  LaunchMode mode = LaunchMode.platformDefault,
+}) {
+  return launchUrl(uri, mode: mode);
+}
+
 /// Campus map page.
 class MapPage extends StatefulWidget {
   /// Place stream displayed on the campus map.
@@ -25,12 +40,15 @@ class MapPage extends StatefulWidget {
   /// Location source used to display the current user position.
   final LocationSource locationSource;
 
+  final NavigationLauncher _navigationLauncher;
+
   /// Creates the campus map page.
   const MapPage({
     super.key,
     this.lieuxStream,
     this.locationSource = const GeolocatorLocationSource(),
-  });
+    NavigationLauncher navigationLauncher = _defaultNavigationLauncher,
+  }) : _navigationLauncher = navigationLauncher;
 
   @override
   State<MapPage> createState() => _MapPageState();
@@ -38,6 +56,8 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   static const LatLng _campusCenter = LatLng(50.3559, 3.5182);
+  static const _directionsErrorMessage =
+      "Impossible d'ouvrir une application de navigation.";
   final _mapController = MapController();
   late final Stream<List<Lieu>> _lieuxStream;
   StreamSubscription<LatLng>? _positionSubscription;
@@ -117,6 +137,7 @@ class _MapPageState extends State<MapPage> {
                 _SelectedPlacePanel(
                   place: selectedPlace,
                   onDetailsPressed: () => _openPlaceDetails(selectedPlace),
+                  onDirectionsPressed: () => _openDirections(selectedPlace),
                 ),
             ],
           );
@@ -226,15 +247,77 @@ class _MapPageState extends State<MapPage> {
       ),
     );
   }
+
+  Future<void> _openDirections(Lieu place) async {
+    final nativeUri = Uri(
+      scheme: 'geo',
+      path: '0,0',
+      queryParameters: {
+        'q': '${place.latitude},${place.longitude}(${place.nom})',
+      },
+    );
+    final fallbackUri = Uri.https('www.google.com', '/maps/dir/', {
+      'api': '1',
+      'destination': '${place.latitude},${place.longitude}',
+      'travelmode': 'walking',
+    });
+
+    if (kIsWeb) {
+      final didLaunchWeb = await _tryLaunchDirectionsUri(fallbackUri);
+      if (didLaunchWeb || !mounted) {
+        return;
+      }
+
+      _showDirectionsError();
+      return;
+    }
+
+    final didLaunchNative = await _tryLaunchDirectionsUri(nativeUri);
+    if (didLaunchNative) {
+      return;
+    }
+
+    final didLaunchFallback = await _tryLaunchDirectionsUri(fallbackUri);
+    if (didLaunchFallback || !mounted) {
+      return;
+    }
+
+    _showDirectionsError();
+  }
+
+  Future<bool> _tryLaunchDirectionsUri(Uri uri) async {
+    try {
+      return widget._navigationLauncher(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (error, stackTrace) {
+      logger.e(
+        'Failed to open navigation app.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return false;
+    }
+  }
+
+  void _showDirectionsError() {
+    logger.w('No navigation app could open directions.');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text(_directionsErrorMessage)),
+    );
+  }
 }
 
 class _SelectedPlacePanel extends StatelessWidget {
   final Lieu place;
   final VoidCallback onDetailsPressed;
+  final VoidCallback onDirectionsPressed;
 
   const _SelectedPlacePanel({
     required this.place,
     required this.onDetailsPressed,
+    required this.onDirectionsPressed,
   });
 
   @override
@@ -321,6 +404,19 @@ class _SelectedPlacePanel extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
+              Align(
+                alignment: Alignment.centerRight,
+                child: IconButton.filled(
+                  onPressed: onDirectionsPressed,
+                  tooltip: 'Itineraire',
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.accent,
+                    foregroundColor: AppColors.surface,
+                  ),
+                  icon: const Icon(Icons.directions),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
