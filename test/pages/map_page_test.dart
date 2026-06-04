@@ -87,14 +87,14 @@ void main() {
     await tester.tap(find.byKey(const Key('place-marker-resto')));
     await tester.pump();
 
-    expect(find.text('Voir les dÃ©tails'), findsOneWidget);
+    expect(find.byTooltip('Itineraire'), findsOneWidget);
 
     await tester.tap(
       find.byKey(const Key('map-category-filter-bibliotheque')),
     );
     await tester.pump();
 
-    expect(find.text('Voir les dÃ©tails'), findsNothing);
+    expect(find.byTooltip('Itineraire'), findsNothing);
 
     await locationSource.dispose();
   });
