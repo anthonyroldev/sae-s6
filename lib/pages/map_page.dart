@@ -16,6 +16,7 @@ import '../data/sources/location_access_exception.dart';
 import '../data/sources/location_source.dart';
 import 'add_lieu_page.dart';
 import 'feed/place_category_icon.dart';
+import 'feed/place_filter_chip.dart';
 import 'feed/status_badge.dart';
 import 'lieu_detail_page.dart';
 
@@ -56,6 +57,7 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   static const LatLng _campusCenter = LatLng(50.3559, 3.5182);
+  static const _filters = LieuCategorie.values;
   static const _directionsErrorMessage =
       "Impossible d'ouvrir une application de navigation.";
   final _mapController = MapController();
@@ -63,6 +65,7 @@ class _MapPageState extends State<MapPage> {
   StreamSubscription<LatLng>? _positionSubscription;
   LatLng? _userPosition;
   Lieu? _selectedPlace;
+  LieuCategorie _selectedCategory = LieuCategorie.all;
   bool _hasCenteredOnUser = false;
 
   @override
@@ -95,8 +98,12 @@ class _MapPageState extends State<MapPage> {
           }
 
           final places = snapshot.hasData ? snapshot.data! : const <Lieu>[];
-          final selectedPlace = _selectedPlace;
+          final selectedPlace = _selectedPlace != null &&
+                  _matchesFilter(_selectedPlace!, _selectedCategory)
+              ? _selectedPlace
+              : null;
           final markers = places
+              .where((place) => _matchesFilter(place, _selectedCategory))
               .where(_hasValidCoordinates)
               .map(_buildMarker)
               .toList(growable: false);
@@ -109,6 +116,11 @@ class _MapPageState extends State<MapPage> {
                 markers: markers,
                 userPosition: _userPosition,
                 onTap: _openAddLieuPage,
+              ),
+              _MapCategoryFilters(
+                filters: _filters,
+                selectedFilter: _selectedCategory,
+                onFilterSelected: _selectCategory,
               ),
               if (snapshot.connectionState == ConnectionState.waiting)
                 const Center(child: CircularProgressIndicator()),
@@ -144,6 +156,19 @@ class _MapPageState extends State<MapPage> {
         },
       ),
     );
+  }
+
+  bool _matchesFilter(Lieu place, LieuCategorie filter) {
+    return filter == LieuCategorie.all || place.categorie == filter;
+  }
+
+  void _selectCategory(LieuCategorie category) {
+    setState(() {
+      _selectedCategory = category;
+      if (_selectedPlace != null && !_matchesFilter(_selectedPlace!, category)) {
+        _selectedPlace = null;
+      }
+    });
   }
 
   void _watchUserPosition() {
@@ -305,6 +330,48 @@ class _MapPageState extends State<MapPage> {
     logger.w('No navigation app could open directions.');
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text(_directionsErrorMessage)),
+    );
+  }
+}
+
+class _MapCategoryFilters extends StatelessWidget {
+  final List<LieuCategorie> filters;
+  final LieuCategorie selectedFilter;
+  final ValueChanged<LieuCategorie> onFilterSelected;
+
+  const _MapCategoryFilters({
+    required this.filters,
+    required this.selectedFilter,
+    required this.onFilterSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final topPadding = MediaQuery.paddingOf(context).top;
+
+    return Positioned(
+      top: AppSpacing.sm + topPadding,
+      left: 0,
+      right: 0,
+      child: SizedBox(
+        height: 40,
+        child: ListView.separated(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          scrollDirection: Axis.horizontal,
+          itemCount: filters.length,
+          separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
+          itemBuilder: (context, index) {
+            final filter = filters[index];
+
+            return PlaceFilterChip(
+              key: Key('map-category-filter-${filter.value}'),
+              label: filter.label,
+              isSelected: filter == selectedFilter,
+              onSelected: () => onFilterSelected(filter),
+            );
+          },
+        ),
+      ),
     );
   }
 }
