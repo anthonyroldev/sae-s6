@@ -64,6 +64,7 @@ class Lieu {
   final String imageUrl;
   final LieuCategorie categorie;
   final bool isValidated;
+  final bool isPermanent;
 
   /// Creates a campus place.
   const Lieu({
@@ -74,6 +75,7 @@ class Lieu {
     this.longitude = 0,
     this.categorie = LieuCategorie.services,
     this.isValidated = true,
+    this.isPermanent = true,
     this.heureOuverture,
     this.heureFermeture,
     String? photo,
@@ -99,6 +101,7 @@ class Lieu {
           : map.containsKey('isValidated')
           ? SupabaseDataConverter.toBool(map['isValidated'])
           : true,
+      isPermanent: (map['is_permanent'] as bool?) ?? true,
     );
   }
 
@@ -115,6 +118,7 @@ class Lieu {
       'image_url': imageUrl,
       'categorie': categorie.value,
       'is_validated': isValidated,
+      'is_permanent': isPermanent,
     };
   }
 
@@ -130,6 +134,7 @@ class Lieu {
     String? imageUrl,
     LieuCategorie? categorie,
     bool? isValidated,
+    bool? isPermanent,
   }) {
     return Lieu(
       id: id ?? this.id,
@@ -142,6 +147,7 @@ class Lieu {
       imageUrl: imageUrl ?? this.imageUrl,
       categorie: categorie ?? this.categorie,
       isValidated: isValidated ?? this.isValidated,
+      isPermanent: isPermanent ?? this.isPermanent,
     );
   }
 
