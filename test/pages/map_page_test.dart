@@ -10,6 +10,95 @@ import 'package:le_repere/pages/map_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 void main() {
+  testWidgets('filters markers by selected category', (tester) async {
+    final locationSource = _FakeLocationSource();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MapPage(
+          lieuxStream: Stream.value(const [
+            Lieu(
+              id: 'bu',
+              nom: 'Bibliotheque',
+              description: 'Calme',
+              latitude: 50.356,
+              longitude: 3.519,
+              categorie: LieuCategorie.bibliotheque,
+            ),
+            Lieu(
+              id: 'resto',
+              nom: 'Restaurant',
+              description: 'Repas',
+              latitude: 50.357,
+              longitude: 3.520,
+              categorie: LieuCategorie.repas,
+            ),
+          ]),
+          locationSource: locationSource,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byKey(const Key('place-marker-bu')), findsOneWidget);
+    expect(find.byKey(const Key('place-marker-resto')), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(const Key('map-category-filter-bibliotheque')),
+    );
+    await tester.pump();
+
+    expect(find.byKey(const Key('place-marker-bu')), findsOneWidget);
+    expect(find.byKey(const Key('place-marker-resto')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('map-category-filter-')));
+    await tester.pump();
+
+    expect(find.byKey(const Key('place-marker-bu')), findsOneWidget);
+    expect(find.byKey(const Key('place-marker-resto')), findsOneWidget);
+
+    await locationSource.dispose();
+  });
+
+  testWidgets('hides the selected place panel when its category is filtered out', (
+    tester,
+  ) async {
+    final locationSource = _FakeLocationSource();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MapPage(
+          lieuxStream: Stream.value(const [
+            Lieu(
+              id: 'resto',
+              nom: 'Restaurant',
+              description: 'Repas',
+              latitude: 50.357,
+              longitude: 3.520,
+              categorie: LieuCategorie.repas,
+            ),
+          ]),
+          locationSource: locationSource,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byKey(const Key('place-marker-resto')));
+    await tester.pump();
+
+    expect(find.text('Voir les dÃ©tails'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(const Key('map-category-filter-bibliotheque')),
+    );
+    await tester.pump();
+
+    expect(find.text('Voir les dÃ©tails'), findsNothing);
+
+    await locationSource.dispose();
+  });
+
   testWidgets('shows the current user position marker', (tester) async {
     final locationSource = _FakeLocationSource();
 
