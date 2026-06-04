@@ -35,7 +35,7 @@ class ProfilPage extends StatelessWidget {
   final RoleSource roleSource;
 
   /// Reviews backend injected for testing.
-  final AvisSupabaseSource avisSource;
+  final AvisSource avisSource;
 
   /// Creates the profile page.
   ProfilPage({
@@ -44,7 +44,7 @@ class ProfilPage extends StatelessWidget {
     UtilisateurSource? utilisateurSource,
     RoleSource? roleSource,
     FavorisSource? favorisSource,
-    AvisSupabaseSource? avisSource,
+    AvisSource? avisSource,
   }) : authSource = authSource ?? AuthSupabaseSource(),
        utilisateurSource = utilisateurSource ?? UtilisateurSupabaseSource(),
        favorisSource = favorisSource ?? FavorisSupabaseSource(),
@@ -438,7 +438,7 @@ class _FavoritePlaceCard extends StatelessWidget {
 }
 
 class _UserAvisList extends StatefulWidget {
-  final AvisSupabaseSource avisSource;
+  final AvisSource avisSource;
 
   const _UserAvisList({required this.avisSource});
 

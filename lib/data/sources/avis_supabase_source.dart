@@ -4,8 +4,16 @@ import '../models/avis.dart';
 import '../models/avis_with_auteur.dart';
 import '../models/avis_with_lieu.dart';
 
+/// Abstract source for place reviews.
+abstract class AvisSource {
+  Future<List<AvisWithAuteur>> fetchForLieu(String idLieu, {int? limit});
+  Future<({double average, int count})> fetchStats(String idLieu);
+  Future<List<AvisWithLieu>> fetchForCurrentUser();
+  Future<void> save(Avis avis);
+}
+
 /// Supabase source for place reviews.
-class AvisSupabaseSource {
+class AvisSupabaseSource implements AvisSource {
   static const _table = 'avis';
 
   final SupabaseClient _client;
@@ -25,6 +33,7 @@ class AvisSupabaseSource {
   }
 
   /// Fetches reviews with author names for a place, newest first.
+  @override
   Future<List<AvisWithAuteur>> fetchForLieu(
     String idLieu, {
     int? limit,
@@ -60,6 +69,7 @@ class AvisSupabaseSource {
   }
 
   /// Returns the average note and total review count for a place.
+  @override
   Future<({double average, int count})> fetchStats(String idLieu) async {
     final rows = await _client
         .from(_table)
@@ -71,6 +81,7 @@ class AvisSupabaseSource {
   }
 
   /// Fetches all reviews posted by the current user, with the place name.
+  @override
   Future<List<AvisWithLieu>> fetchForCurrentUser() async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) return [];
@@ -100,6 +111,7 @@ class AvisSupabaseSource {
   }
 
   /// Adds or updates one review for a place.
+  @override
   Future<void> save(Avis avis) {
     _validateAvis(avis);
     if (avis.idAvis == 0) {

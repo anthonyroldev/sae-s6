@@ -2,10 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le_repere/data/models/avis.dart';
+import 'package:le_repere/data/models/avis_with_auteur.dart';
+import 'package:le_repere/data/models/avis_with_lieu.dart';
 import 'package:le_repere/data/models/lieu.dart';
 import 'package:le_repere/data/models/user_role.dart';
 import 'package:le_repere/data/models/utilisateur.dart';
 import 'package:le_repere/data/sources/auth_source.dart';
+import 'package:le_repere/data/sources/avis_supabase_source.dart';
 import 'package:le_repere/data/sources/favoris_source.dart';
 import 'package:le_repere/data/sources/role_source.dart';
 import 'package:le_repere/pages/profil_page.dart';
@@ -14,6 +18,17 @@ import '../support/fake_auth_source.dart';
 import '../support/fake_favoris_source.dart';
 import '../support/fake_role_source.dart';
 import '../support/fake_utilisateur_source.dart';
+
+class _FakeAvisSource implements AvisSource {
+  @override
+  Future<List<AvisWithAuteur>> fetchForLieu(String idLieu, {int? limit}) async => [];
+  @override
+  Future<({double average, int count})> fetchStats(String idLieu) async => (average: 0.0, count: 0);
+  @override
+  Future<List<AvisWithLieu>> fetchForCurrentUser() async => [];
+  @override
+  Future<void> save(Avis avis) async {}
+}
 
 void main() {
   const utilisateur = Utilisateur(
@@ -183,6 +198,7 @@ Widget _buildPage(
       utilisateurSource: FakeUtilisateurSource(stream),
       roleSource: roleSource ?? FakeRoleSource(),
       favorisSource: favorisSource ?? FakeFavorisSource(),
+      avisSource: _FakeAvisSource(),
     ),
   );
 }
