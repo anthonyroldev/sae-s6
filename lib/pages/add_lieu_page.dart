@@ -55,6 +55,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
   final _selectedCategory = ValueNotifier<LieuCategorie>(
     LieuCategorie.services,
   );
+  final _isPermanent = ValueNotifier<bool>(true);
   final _isSubmitting = ValueNotifier<bool>(false);
   final _isLocating = ValueNotifier<bool>(false);
 
@@ -75,6 +76,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
     _heureFermeture.dispose();
     _selectedImage.dispose();
     _selectedCategory.dispose();
+    _isPermanent.dispose();
     _isSubmitting.dispose();
     _isLocating.dispose();
     super.dispose();
@@ -233,6 +235,10 @@ class _AddLieuPageState extends State<AddLieuPage> {
                         heureOuverture: _heureOuverture,
                         heureFermeture: _heureFermeture,
                       ),
+                      const SizedBox(height: AppSpacing.md),
+                      _FieldLabel(label: 'TYPE DE LIEU'),
+                      const SizedBox(height: AppSpacing.xs),
+                      _PermanenceToggle(isPermanent: _isPermanent),
                       const SizedBox(height: AppSpacing.md),
                       _FieldLabel(label: 'IMAGE'),
                       const SizedBox(height: AppSpacing.xs),
@@ -465,6 +471,7 @@ class _AddLieuPageState extends State<AddLieuPage> {
         categorie: _selectedCategory.value,
         heureOuverture: _toDuration(_heureOuverture.value),
         heureFermeture: _toDuration(_heureFermeture.value),
+        isPermanent: _isPermanent.value,
         imageUrl: uploadedImage?.url ?? '',
       );
 
@@ -522,6 +529,49 @@ Duration? _toDuration(TimeOfDay? time) {
     return null;
   }
   return Duration(hours: time.hour, minutes: time.minute);
+}
+
+class _PermanenceToggle extends StatelessWidget {
+  final ValueNotifier<bool> isPermanent;
+
+  const _PermanenceToggle({required this.isPermanent});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: isPermanent,
+      builder: (context, value, _) {
+        return SegmentedButton<bool>(
+          segments: const [
+            ButtonSegment(
+              value: true,
+              label: Text('Permanent'),
+              icon: Icon(Icons.push_pin_outlined),
+            ),
+            ButtonSegment(
+              value: false,
+              label: Text('Temporaire'),
+              icon: Icon(Icons.schedule_outlined),
+            ),
+          ],
+          selected: {value},
+          onSelectionChanged: (selection) {
+            isPermanent.value = selection.first;
+          },
+          style: SegmentedButton.styleFrom(
+            backgroundColor: AppColors.surfaceVariant,
+            selectedBackgroundColor: AppColors.primary,
+            selectedForegroundColor: AppColors.surface,
+            foregroundColor: AppColors.secondaryText,
+            textStyle: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _PickedImage {

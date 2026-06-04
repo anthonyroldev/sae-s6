@@ -40,4 +40,10 @@ abstract final class AppColors {
 
   /// Selected item background color.
   static const selected = Color(0xFFDBEAFE);
+
+  /// Warning text color.
+  static const warningText = Color(0xFFD97706);
+
+  /// Warning background color.
+  static const warningBackground = Color(0xFFFEF3C7);
 }

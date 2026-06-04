@@ -11,6 +11,7 @@ import '../data/sources/favoris_supabase_source.dart';
 import 'add_avis_page.dart';
 import 'avis_list_page.dart';
 import 'feed/category_badge.dart';
+import 'feed/permanence_badge.dart';
 import 'feed/place_category_icon.dart';
 import 'feed/status_badge.dart';
 import 'lieu/avis_card.dart';
@@ -182,8 +183,15 @@ class _LieuDetailPageState extends State<LieuDetailPage> {
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
-          // Category chip
-          CategoryBadge(place: lieu),
+          // Category + permanence chips
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: [
+              CategoryBadge(place: lieu),
+              PermanenceBadge(isPermanent: lieu.isPermanent),
+            ],
+          ),
           const SizedBox(height: AppSpacing.md),
           // Description
           Text(
