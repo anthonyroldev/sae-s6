@@ -509,7 +509,7 @@ class _UserAvisListState extends State<_UserAvisList> {
             ),
             const SizedBox(height: AppSpacing.xs),
             const Text(
-              'Vos contributions publiées sur Le Repère.',
+              'Vos avis publiées sur Le Repère.',
               style: TextStyle(
                 color: AppColors.secondaryText,
                 fontSize: 14,
