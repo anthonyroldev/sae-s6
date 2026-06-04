@@ -33,6 +33,10 @@ class AvisCard extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
+                if (!item.avis.isValidated) ...[
+                  const SizedBox(width: AppSpacing.sm),
+                  _ModerationBadge(status: item.avis.moderationStatus),
+                ],
                 const Spacer(),
                 Text(
                   _formatDate(item.avis.date),
@@ -73,5 +77,33 @@ class AvisCard extends StatelessWidget {
     return '${date.day.toString().padLeft(2, '0')}/'
         '${date.month.toString().padLeft(2, '0')}/'
         '${date.year}';
+  }
+}
+
+class _ModerationBadge extends StatelessWidget {
+  final String status;
+
+  const _ModerationBadge({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDenied = status == 'denied';
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: isDenied ? AppColors.errorBackground : AppColors.selected,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        child: Text(
+          isDenied ? 'Refusé' : 'En attente',
+          style: TextStyle(
+            color: isDenied ? AppColors.errorText : AppColors.accent,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
   }
 }

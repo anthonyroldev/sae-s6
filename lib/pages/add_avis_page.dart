@@ -1,24 +1,32 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
 import '../core/utils/logger.dart';
 import '../data/models/avis.dart';
 import '../data/models/lieu.dart';
+import '../data/sources/avis_source.dart';
 import '../data/sources/avis_supabase_source.dart';
 
+/// Page used to submit a review for a place.
 class AddAvisPage extends StatefulWidget {
+  /// Reviewed place.
   final Lieu lieu;
 
-  const AddAvisPage({super.key, required this.lieu});
+  /// Review backend.
+  final AvisSource avisSource;
+
+  /// Creates the add review page.
+  AddAvisPage({super.key, required this.lieu, AvisSource? avisSource})
+    : avisSource = avisSource ?? AvisSupabaseSource();
 
   @override
   State<AddAvisPage> createState() => _AddAvisPageState();
 }
 
 class _AddAvisPageState extends State<AddAvisPage> {
-  final _avisSource = AvisSupabaseSource();
   final _commentaireController = TextEditingController();
   int _selectedNote = 0;
   bool _isLoading = false;
@@ -36,6 +44,7 @@ class _AddAvisPageState extends State<AddAvisPage> {
       );
       return;
     }
+
     final commentaire = _commentaireController.text.trim();
     if (commentaire.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -44,7 +53,7 @@ class _AddAvisPageState extends State<AddAvisPage> {
       return;
     }
 
-    final userId = Supabase.instance.client.auth.currentUser?.id;
+    final userId = widget.avisSource.currentUserId;
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -56,28 +65,18 @@ class _AddAvisPageState extends State<AddAvisPage> {
 
     setState(() => _isLoading = true);
     try {
-      final isAccepted = await _avisSource.validateReview(
-        commentaire: commentaire,
-        nomLieu: widget.lieu.nom,
-      );
-      if (!isAccepted) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Votre avis ne peut pas être publié.')),
-        );
-        return;
-      }
-
       final avis = Avis.create(
         note: _selectedNote.toDouble(),
         commentaire: commentaire,
         idLieu: widget.lieu.id,
         idUtilisateur: userId,
       );
-      await _avisSource.save(avis);
+      final savedAvis = await widget.avisSource.save(avis);
+      unawaited(_moderate(savedAvis));
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Avis ajouté avec succès !')),
+        const SnackBar(content: Text('Avis envoyé. Validation en attente.')),
       );
       Navigator.of(context).pop(true);
     } on Object catch (error, stackTrace) {
@@ -88,6 +87,18 @@ class _AddAvisPageState extends State<AddAvisPage> {
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _moderate(Avis avis) async {
+    try {
+      await widget.avisSource.moderateReview(avis);
+    } on Object catch (error, stackTrace) {
+      logger.e(
+        'Failed to start avis moderation',
+        error: error,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -226,7 +237,7 @@ class _AddAvisPageState extends State<AddAvisPage> {
           minLines: 3,
           textCapitalization: TextCapitalization.sentences,
           decoration: InputDecoration(
-            hintText: 'Partagez votre expérience…',
+            hintText: 'Partagez votre expérience...',
             hintStyle: const TextStyle(color: AppColors.secondaryText),
             filled: true,
             fillColor: AppColors.surface,

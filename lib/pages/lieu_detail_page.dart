@@ -29,7 +29,7 @@ class LieuDetailPage extends StatefulWidget {
 class _LieuDetailPageState extends State<LieuDetailPage> {
   final _avisSource = AvisSupabaseSource();
   final _favorisSource = FavorisSupabaseSource();
-  late final Future<_AvisData> _avisFuture;
+  late Future<_AvisData> _avisFuture;
 
   @override
   void initState() {
@@ -81,8 +81,9 @@ class _LieuDetailPageState extends State<LieuDetailPage> {
           stream: _favorisSource.watchCurrentUserPlaceIds(),
           initialData: const <String>{},
           builder: (context, favSnapshot) {
-            final isFavorite =
-                (favSnapshot.data ?? const <String>{}).contains(widget.lieu.id);
+            final isFavorite = (favSnapshot.data ?? const <String>{}).contains(
+              widget.lieu.id,
+            );
             return SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,8 +261,7 @@ class _LieuDetailPageState extends State<LieuDetailPage> {
       future: _avisFuture,
       builder: (context, snapshot) {
         final data = snapshot.data;
-        final isLoading =
-            snapshot.connectionState == ConnectionState.waiting;
+        final isLoading = snapshot.connectionState == ConnectionState.waiting;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -367,12 +367,12 @@ class _LieuDetailPageState extends State<LieuDetailPage> {
                       ),
                     )
                     .then((added) {
-                  if (added == true) {
-                    setState(() {
-                      _avisFuture = _loadAvisData();
-                    });
-                  }
-                }),
+                      if (added == true) {
+                        setState(() {
+                          _avisFuture = _loadAvisData();
+                        });
+                      }
+                    }),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: AppColors.surface,

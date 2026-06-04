@@ -1,49 +1,33 @@
-import "@supabase/functions-js/edge-runtime.d.ts";
+import { withSupabase } from "npm:@supabase/server";
 
-const allowedOrigins = (Deno.env.get("ALLOWED_ORIGINS") ?? "*")
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
+export default {
+  fetch: withSupabase({ auth: "user" }, async (req, ctx) => {
+    const { avisId } = await req.json();
+    if (!Number.isInteger(avisId) || avisId <= 0) {
+      return Response.json({ error: "invalid_avis_id" }, { status: 400 });
+    }
 
-const openRouterApiKey = Deno.env.get("OPENROUTER_API_KEY");
-const model = Deno.env.get("OPENROUTER_MODEL") ?? "deepseek/deepseek-v4-pro";
+    const { data: review, error: reviewError } = await ctx.supabase
+      .from("avis")
+      .select("id_avis, commentaire, id_lieu, lieux(nom)")
+      .eq("id_avis", avisId)
+      .maybeSingle();
 
-function headers(req: Request): HeadersInit {
-  const origin = req.headers.get("origin") ?? "";
-  const result: Record<string, string> = {
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Content-Type": "text/plain",
-  };
-
-  if (allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
-    result["Access-Control-Allow-Origin"] = allowedOrigins.includes("*") ? "*" : origin;
-  }
-
-  return result;
-}
-
-Deno.serve(async (req) => {
-  const responseHeaders = headers(req);
-
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: responseHeaders });
-  }
-
-  try {
-    const { review, placeName } = await req.json();
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    if (reviewError != null) {
+      return Response.json({ error: "review_lookup_failed" }, { status: 500 });
+    }
+    if (review == null) {
+      return Response.json({ error: "review_not_found" }, { status: 404 });
+    }
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
-      signal: controller.signal,
       headers: {
-        "Authorization": `Bearer ${openRouterApiKey}`,
+        "Authorization": `Bearer ${Deno.env.get("OPENROUTER_API_KEY") ?? ""}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model,
+        model: Deno.env.get("OPENROUTER_MODEL") ?? "deepseek/deepseek-v4-pro",
         messages: [
           {
             role: "system",
@@ -61,7 +45,7 @@ Deno.serve(async (req) => {
           },
           {
             role: "user",
-            content: `Place: ${placeName ?? ""}\nReview to classify:\n${review ?? ""}`,
+            content: `Place: ${review.lieux?.nom ?? ""}\nReview to classify:\n${review.commentaire}`,
           },
         ],
         reasoning: { enabled: false },
@@ -70,19 +54,24 @@ Deno.serve(async (req) => {
       }),
     });
 
-    clearTimeout(timeoutId);
+    const result = response.ok ? await response.json() : null;
+    const status = result?.choices?.[0]?.message?.content?.trim() === "ACCEPTED" ? "accepted" : "denied";
 
-    if (!response.ok) {
-      return new Response("DENIED", { headers: responseHeaders });
+    console.log(`Review ID ${review.id_avis} classified as ${status.toUpperCase()}`);
+
+    const { error: updateError } = await ctx.supabaseAdmin
+      .from("avis")
+      .update({
+        is_validated: status === "accepted",
+        moderation_status: status,
+      })
+      .eq("id_avis", review.id_avis);
+
+    if (updateError != null) {
+        console.error("Failed to update review status:", updateError);
+      return Response.json({ error: "review_update_failed" }, { status: 500 });
     }
 
-    const result = await response.json();
-    const verdict = result.choices?.[0]?.message?.content?.trim() === "ACCEPTED"
-      ? "ACCEPTED"
-      : "DENIED";
-
-    return new Response(verdict, { headers: responseHeaders });
-  } catch {
-    return new Response("DENIED", { headers: responseHeaders });
-  }
-});
+    return Response.json({ status });
+  }),
+};

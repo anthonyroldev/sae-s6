@@ -2,9 +2,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/avis.dart';
 import '../models/avis_with_auteur.dart';
+import 'avis_source.dart';
 
 /// Supabase source for place reviews.
-class AvisSupabaseSource {
+class AvisSupabaseSource implements AvisSource {
   static const _table = 'avis';
 
   final SupabaseClient _client;
@@ -12,6 +13,9 @@ class AvisSupabaseSource {
   /// Creates a Supabase source for place reviews.
   AvisSupabaseSource({SupabaseClient? client})
     : _client = client ?? Supabase.instance.client;
+
+  @override
+  String? get currentUserId => _client.auth.currentUser?.id;
 
   /// Watches reviews for a place, newest first.
   Stream<List<Avis>> watchForLieu(String idLieu) {
@@ -24,6 +28,7 @@ class AvisSupabaseSource {
   }
 
   /// Fetches reviews with author names for a place, newest first.
+  @override
   Future<List<AvisWithAuteur>> fetchForLieu(String idLieu, {int? limit}) async {
     final query = _client
         .from(_table)
@@ -56,38 +61,53 @@ class AvisSupabaseSource {
   }
 
   /// Returns the average note and total review count for a place.
+  @override
   Future<({double average, int count})> fetchStats(String idLieu) async {
     final rows = await _client
         .from(_table)
         .select('note')
-        .eq('id_lieu', idLieu);
+        .eq('id_lieu', idLieu)
+        .eq('is_validated', true);
     if (rows.isEmpty) return (average: 0.0, count: 0);
-    final sum = rows.fold<int>(
+    final sum = rows.fold<double>(
       0,
-      (s, r) => s + ((r['note'] as num?)?.toInt() ?? 0),
+      (s, r) => s + ((r['note'] as num?)?.toDouble() ?? 0),
     );
     return (average: sum / rows.length, count: rows.length);
   }
 
-  /// Validates one review with the moderation Edge Function.
-  Future<bool> validateReview({
-    required String commentaire,
-    required String nomLieu,
-  }) async {
-    final response = await _client.functions.invoke(
+  @override
+  Future<void> moderateReview(Avis avis) async {
+    if (avis.idAvis == 0) {
+      throw ArgumentError.value(avis.idAvis, 'idAvis');
+    }
+    await _client.functions.invoke(
       'validate-review',
-      body: {'review': commentaire, 'placeName': nomLieu},
+      body: {'avisId': avis.idAvis},
     );
-    return response.data.toString().trim() == 'ACCEPTED';
   }
 
   /// Adds or updates one review for a place.
-  Future<void> save(Avis avis) {
+  @override
+  Future<Avis> save(Avis avis) async {
     _validateAvis(avis);
-    if (avis.idAvis == 0) {
-      return _client.from(_table).insert(avis.toMap());
+    final userId = currentUserId;
+    if (userId == null) {
+      throw StateError('Authenticated user required');
     }
-    return _client.from(_table).update(avis.toMap()).eq('id_avis', avis.idAvis);
+    final payload = {...avis.toMap(), 'id_utilisateur': userId};
+
+    if (avis.idAvis == 0) {
+      final row = await _client.from(_table).insert(payload).select().single();
+      return Avis.fromMap(row);
+    }
+    final row = await _client
+        .from(_table)
+        .update(payload)
+        .eq('id_avis', avis.idAvis)
+        .select()
+        .single();
+    return Avis.fromMap(row);
   }
 
   void _validateAvis(Avis avis) {
@@ -102,6 +122,11 @@ class AvisSupabaseSource {
     }
     if (avis.commentaire.trim().isEmpty) {
       throw ArgumentError.value(avis.commentaire, 'commentaire');
+    }
+    if (avis.moderationStatus != 'pending' &&
+        avis.moderationStatus != 'accepted' &&
+        avis.moderationStatus != 'denied') {
+      throw ArgumentError.value(avis.moderationStatus, 'moderationStatus');
     }
   }
 }
