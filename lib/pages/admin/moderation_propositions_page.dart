@@ -41,13 +41,7 @@ class ModerationPropositionsPage extends StatefulWidget {
 
 class _ModerationPropositionsPageState
     extends State<ModerationPropositionsPage> {
-  late Future<AdminMetrics> _metricsFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _metricsFuture = widget.metricsSource.fetch();
-  }
+  Future<AdminMetrics>? _metricsFuture;
 
   @override
   Widget build(BuildContext context) {
@@ -89,10 +83,11 @@ class _ModerationPropositionsPageState
   }
 
   Widget _buildDashboard() {
+    final metricsFuture = _metricsFuture ??= widget.metricsSource.fetch();
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.md),
       children: [
-        _MetricsPanel(metricsFuture: _metricsFuture),
+        _MetricsPanel(metricsFuture: metricsFuture),
         const SizedBox(height: AppSpacing.xl),
         const _SectionHeader(
           title: 'Propositions en attente',
