@@ -55,6 +55,28 @@ void main() {
     expect(find.text('BU Sciences'), findsOneWidget);
   });
 
+  testWidgets('removes a favorite place from profile carousel', (tester) async {
+    const favoritePlace = Lieu(
+      id: 'place-id',
+      nom: 'BU Sciences',
+      description: 'Bibliotheque universitaire',
+      categorie: LieuCategorie.bibliotheque,
+    );
+    final favorisSource = FakeFavorisSource(
+      placesStream: Stream.value(const [favoritePlace]),
+    );
+
+    await tester.pumpWidget(
+      _buildPage(Stream.value(utilisateur), favorisSource: favorisSource),
+    );
+    await tester.pump();
+    await tester.pump();
+    await tester.tap(find.byTooltip('Retirer des favoris'));
+    await tester.pump();
+
+    expect(favorisSource.updates, [(lieuId: 'place-id', isFavorite: false)]);
+  });
+
   testWidgets('hides empty GPS position', (tester) async {
     await tester.pumpWidget(
       _buildPage(
