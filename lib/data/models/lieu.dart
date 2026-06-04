@@ -64,6 +64,8 @@ class Lieu {
   final String imageUrl;
   final LieuCategorie categorie;
   final bool isValidated;
+  final bool isPermanent;
+  final DateTime? dateFinPrestation;
 
   /// Creates a campus place.
   const Lieu({
@@ -74,6 +76,8 @@ class Lieu {
     this.longitude = 0,
     this.categorie = LieuCategorie.services,
     this.isValidated = true,
+    this.isPermanent = true,
+    this.dateFinPrestation,
     this.heureOuverture,
     this.heureFermeture,
     String? photo,
@@ -99,6 +103,10 @@ class Lieu {
           : map.containsKey('isValidated')
           ? SupabaseDataConverter.toBool(map['isValidated'])
           : true,
+      isPermanent: (map['is_permanent'] as bool?) ?? true,
+      dateFinPrestation: map['date_fin_prestation'] != null
+          ? DateTime.parse(map['date_fin_prestation'].toString())
+          : null,
     );
   }
 
@@ -115,6 +123,12 @@ class Lieu {
       'image_url': imageUrl,
       'categorie': categorie.value,
       'is_validated': isValidated,
+      'is_permanent': isPermanent,
+      if (!isPermanent && dateFinPrestation != null)
+        'date_fin_prestation':
+            '${dateFinPrestation!.year.toString().padLeft(4, '0')}-'
+            '${dateFinPrestation!.month.toString().padLeft(2, '0')}-'
+            '${dateFinPrestation!.day.toString().padLeft(2, '0')}',
     };
   }
 
@@ -130,6 +144,8 @@ class Lieu {
     String? imageUrl,
     LieuCategorie? categorie,
     bool? isValidated,
+    bool? isPermanent,
+    DateTime? dateFinPrestation,
   }) {
     return Lieu(
       id: id ?? this.id,
@@ -142,6 +158,8 @@ class Lieu {
       imageUrl: imageUrl ?? this.imageUrl,
       categorie: categorie ?? this.categorie,
       isValidated: isValidated ?? this.isValidated,
+      isPermanent: isPermanent ?? this.isPermanent,
+      dateFinPrestation: dateFinPrestation ?? this.dateFinPrestation,
     );
   }
 

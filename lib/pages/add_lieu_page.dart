@@ -55,6 +55,8 @@ class _AddLieuPageState extends State<AddLieuPage> {
   final _selectedCategory = ValueNotifier<LieuCategorie>(
     LieuCategorie.services,
   );
+  final _isPermanent = ValueNotifier<bool>(true);
+  final _dateFinPrestation = ValueNotifier<DateTime?>(null);
   final _isSubmitting = ValueNotifier<bool>(false);
   final _isLocating = ValueNotifier<bool>(false);
 
@@ -75,6 +77,8 @@ class _AddLieuPageState extends State<AddLieuPage> {
     _heureFermeture.dispose();
     _selectedImage.dispose();
     _selectedCategory.dispose();
+    _isPermanent.dispose();
+    _dateFinPrestation.dispose();
     _isSubmitting.dispose();
     _isLocating.dispose();
     super.dispose();
@@ -232,6 +236,27 @@ class _AddLieuPageState extends State<AddLieuPage> {
                       _TimeRangeInput(
                         heureOuverture: _heureOuverture,
                         heureFermeture: _heureFermeture,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _FieldLabel(label: 'TYPE DE LIEU'),
+                      const SizedBox(height: AppSpacing.xs),
+                      _PermanenceToggle(isPermanent: _isPermanent),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: _isPermanent,
+                        builder: (context, isPermanent, _) {
+                          if (isPermanent) return const SizedBox.shrink();
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: AppSpacing.md),
+                              _FieldLabel(label: 'DATE DE FIN DE PRESTATION'),
+                              const SizedBox(height: AppSpacing.xs),
+                              _DateFinPrestationInput(
+                                dateFinPrestation: _dateFinPrestation,
+                              ),
+                            ],
+                          );
+                        },
                       ),
                       const SizedBox(height: AppSpacing.md),
                       _FieldLabel(label: 'IMAGE'),
@@ -465,6 +490,11 @@ class _AddLieuPageState extends State<AddLieuPage> {
         categorie: _selectedCategory.value,
         heureOuverture: _toDuration(_heureOuverture.value),
         heureFermeture: _toDuration(_heureFermeture.value),
+        isPermanent: _isPermanent.value,
+        dateFinPrestation: _isPermanent.value
+            ? null
+            : (_dateFinPrestation.value ??
+                DateTime.now().add(const Duration(days: 30))),
         imageUrl: uploadedImage?.url ?? '',
       );
 
@@ -522,6 +552,93 @@ Duration? _toDuration(TimeOfDay? time) {
     return null;
   }
   return Duration(hours: time.hour, minutes: time.minute);
+}
+
+class _DateFinPrestationInput extends StatelessWidget {
+  final ValueNotifier<DateTime?> dateFinPrestation;
+
+  const _DateFinPrestationInput({required this.dateFinPrestation});
+
+  @override
+  Widget build(BuildContext context) {
+    final defaultDate = DateTime.now().add(const Duration(days: 30));
+    return ValueListenableBuilder<DateTime?>(
+      valueListenable: dateFinPrestation,
+      builder: (context, date, _) {
+        final displayed = date ?? defaultDate;
+        final label =
+            '${displayed.day.toString().padLeft(2, '0')}/'
+            '${displayed.month.toString().padLeft(2, '0')}/'
+            '${displayed.year}';
+        return InkWell(
+          onTap: () async {
+            final selected = await showDatePicker(
+              context: context,
+              initialDate: displayed,
+              firstDate: DateTime.now(),
+              lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+            );
+            if (selected != null) {
+              dateFinPrestation.value = selected;
+            }
+          },
+          child: InputDecorator(
+            decoration: _inputDecoration('Date de fin'),
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_today_outlined, size: 16),
+                const SizedBox(width: AppSpacing.xs),
+                Text(label),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PermanenceToggle extends StatelessWidget {
+  final ValueNotifier<bool> isPermanent;
+
+  const _PermanenceToggle({required this.isPermanent});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: isPermanent,
+      builder: (context, value, _) {
+        return SegmentedButton<bool>(
+          segments: const [
+            ButtonSegment(
+              value: true,
+              label: Text('Permanent'),
+              icon: Icon(Icons.push_pin_outlined),
+            ),
+            ButtonSegment(
+              value: false,
+              label: Text('Temporaire'),
+              icon: Icon(Icons.schedule_outlined),
+            ),
+          ],
+          selected: {value},
+          onSelectionChanged: (selection) {
+            isPermanent.value = selection.first;
+          },
+          style: SegmentedButton.styleFrom(
+            backgroundColor: AppColors.surfaceVariant,
+            selectedBackgroundColor: AppColors.primary,
+            selectedForegroundColor: AppColors.surface,
+            foregroundColor: AppColors.secondaryText,
+            textStyle: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _PickedImage {
