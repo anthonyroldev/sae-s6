@@ -30,11 +30,32 @@ class AvisSupabaseSource {
   }) async {
     final query = _client
         .from(_table)
-        .select('*, utilisateurs(nom)')
+        .select()
         .eq('id_lieu', idLieu)
         .order('created_at', ascending: false);
     final rows = limit != null ? await query.limit(limit) : await query;
-    return rows.map(AvisWithAuteur.fromMap).toList();
+    if (rows.isEmpty) return [];
+
+    final avisList = rows.map(Avis.fromMap).toList();
+
+    final userIds = avisList.map((a) => a.idUtilisateur).toSet().toList();
+    final userRows = await _client
+        .from('utilisateurs')
+        .select('id, nom')
+        .inFilter('id', userIds);
+    final nomById = {
+      for (final r in userRows)
+        r['id'] as String: (r['nom'] as String?) ?? 'Anonyme',
+    };
+
+    return avisList
+        .map(
+          (a) => AvisWithAuteur(
+            avis: a,
+            nomAuteur: nomById[a.idUtilisateur] ?? 'Anonyme',
+          ),
+        )
+        .toList();
   }
 
   /// Returns the average note and total review count for a place.

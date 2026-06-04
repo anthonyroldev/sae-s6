@@ -8,6 +8,7 @@ import '../data/models/avis_with_auteur.dart';
 import '../data/models/lieu.dart';
 import '../data/sources/avis_supabase_source.dart';
 import '../data/sources/favoris_supabase_source.dart';
+import 'add_avis_page.dart';
 import 'avis_list_page.dart';
 import 'feed/category_badge.dart';
 import 'feed/place_category_icon.dart';
@@ -353,9 +354,19 @@ class _LieuDetailPageState extends State<LieuDetailPage> {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Bientôt disponible !')),
-                ),
+                onPressed: () => Navigator.of(context)
+                    .push<bool>(
+                      MaterialPageRoute(
+                        builder: (_) => AddAvisPage(lieu: widget.lieu),
+                      ),
+                    )
+                    .then((added) {
+                  if (added == true) {
+                    setState(() {
+                      _avisFuture = _loadAvisData();
+                    });
+                  }
+                }),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: AppColors.surface,
