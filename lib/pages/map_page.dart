@@ -56,6 +56,8 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   static const LatLng _campusCenter = LatLng(50.3559, 3.5182);
+  static const _directionsErrorMessage =
+      "Impossible d'ouvrir une application de navigation.";
   final _mapController = MapController();
   late final Stream<List<Lieu>> _lieuxStream;
   StreamSubscription<LatLng>? _positionSubscription;
@@ -266,11 +268,7 @@ class _MapPageState extends State<MapPage> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Impossible d'ouvrir une application de navigation."),
-        ),
-      );
+      _showDirectionsError();
       return;
     }
 
@@ -284,11 +282,7 @@ class _MapPageState extends State<MapPage> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Impossible d'ouvrir une application de navigation."),
-      ),
-    );
+    _showDirectionsError();
   }
 
   Future<bool> _tryLaunchDirectionsUri(Uri uri) async {
@@ -305,6 +299,13 @@ class _MapPageState extends State<MapPage> {
       );
       return false;
     }
+  }
+
+  void _showDirectionsError() {
+    logger.w('No navigation app could open directions.');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text(_directionsErrorMessage)),
+    );
   }
 }
 
