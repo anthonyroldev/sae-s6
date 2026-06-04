@@ -24,10 +24,7 @@ class AvisSupabaseSource {
   }
 
   /// Fetches reviews with author names for a place, newest first.
-  Future<List<AvisWithAuteur>> fetchForLieu(
-    String idLieu, {
-    int? limit,
-  }) async {
+  Future<List<AvisWithAuteur>> fetchForLieu(String idLieu, {int? limit}) async {
     final query = _client
         .from(_table)
         .select()
@@ -65,8 +62,23 @@ class AvisSupabaseSource {
         .select('note')
         .eq('id_lieu', idLieu);
     if (rows.isEmpty) return (average: 0.0, count: 0);
-    final sum = rows.fold<int>(0, (s, r) => s + ((r['note'] as num?)?.toInt() ?? 0));
+    final sum = rows.fold<int>(
+      0,
+      (s, r) => s + ((r['note'] as num?)?.toInt() ?? 0),
+    );
     return (average: sum / rows.length, count: rows.length);
+  }
+
+  /// Validates one review with the moderation Edge Function.
+  Future<bool> validateReview({
+    required String commentaire,
+    required String nomLieu,
+  }) async {
+    final response = await _client.functions.invoke(
+      'validate-review',
+      body: {'review': commentaire, 'placeName': nomLieu},
+    );
+    return response.data.toString().trim() == 'ACCEPTED';
   }
 
   /// Adds or updates one review for a place.

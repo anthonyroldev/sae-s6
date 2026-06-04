@@ -56,6 +56,18 @@ class _AddAvisPageState extends State<AddAvisPage> {
 
     setState(() => _isLoading = true);
     try {
+      final isAccepted = await _avisSource.validateReview(
+        commentaire: commentaire,
+        nomLieu: widget.lieu.nom,
+      );
+      if (!isAccepted) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Votre avis ne peut pas être publié.')),
+        );
+        return;
+      }
+
       final avis = Avis.create(
         note: _selectedNote.toDouble(),
         commentaire: commentaire,
@@ -229,8 +241,7 @@ class _AddAvisPageState extends State<AddAvisPage> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide:
-                  const BorderSide(color: AppColors.accent, width: 1.5),
+              borderSide: const BorderSide(color: AppColors.accent, width: 1.5),
             ),
           ),
         ),
