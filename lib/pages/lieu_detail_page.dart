@@ -192,6 +192,10 @@ class _LieuDetailPageState extends State<LieuDetailPage> {
               PermanenceBadge(isPermanent: lieu.isPermanent),
             ],
           ),
+          if (!lieu.isPermanent && lieu.dateFinPrestation != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            _DateFinPrestationRow(date: lieu.dateFinPrestation!),
+          ],
           const SizedBox(height: AppSpacing.md),
           // Description
           Text(
@@ -243,12 +247,6 @@ class _LieuDetailPageState extends State<LieuDetailPage> {
                 jours: 'Lundi — Vendredi',
                 heures: lieu.heures.isNotEmpty ? lieu.heures : null,
                 isOpen: lieu.isOpen,
-              ),
-              const Divider(height: 1, color: AppColors.borderSubtle),
-              _HorairesRow(
-                jours: 'Samedi — Dimanche',
-                heures: null,
-                isOpen: false,
               ),
             ],
           ),
@@ -475,6 +473,38 @@ class _HorairesRow extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _DateFinPrestationRow extends StatelessWidget {
+  final DateTime date;
+
+  const _DateFinPrestationRow({required this.date});
+
+  @override
+  Widget build(BuildContext context) {
+    final label =
+        '${date.day.toString().padLeft(2, '0')}/'
+        '${date.month.toString().padLeft(2, '0')}/'
+        '${date.year}';
+    return Row(
+      children: [
+        const Icon(
+          Icons.event_outlined,
+          size: 14,
+          color: AppColors.warningText,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          'Disponible jusqu\'au $label',
+          style: const TextStyle(
+            color: AppColors.warningText,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }

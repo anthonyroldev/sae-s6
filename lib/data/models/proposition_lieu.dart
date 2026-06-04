@@ -48,6 +48,7 @@ class PropositionLieu {
   final String imageUrl;
   final LieuCategorie categorie;
   final bool isPermanent;
+  final DateTime? dateFinPrestation;
   final PropositionStatut statut;
   final String idLieu;
   final String idUtilisateur;
@@ -65,6 +66,7 @@ class PropositionLieu {
     this.imageUrl = '',
     this.categorie = LieuCategorie.services,
     this.isPermanent = true,
+    this.dateFinPrestation,
     this.statut = PropositionStatut.enAttente,
     this.idLieu = '',
     this.idUtilisateur = '',
@@ -105,6 +107,14 @@ class PropositionLieu {
       isPermanent: (map['is_permanent'] as bool?) ??
           (lieuMap['is_permanent'] as bool?) ??
           true,
+      dateFinPrestation: (map['date_fin_prestation'] ??
+                  lieuMap['date_fin_prestation']) !=
+              null
+          ? DateTime.parse(
+              (map['date_fin_prestation'] ?? lieuMap['date_fin_prestation'])
+                  .toString(),
+            )
+          : null,
       statut: PropositionStatut.fromValue(map['statut']),
       idLieu: SupabaseDataConverter.toStringValue(
         map['id_lieu'] ?? map['idLieu'],
@@ -141,6 +151,7 @@ class PropositionLieu {
       categorie: categorie,
       isValidated: false,
       isPermanent: isPermanent,
+      dateFinPrestation: isPermanent ? null : dateFinPrestation,
     );
   }
 
@@ -157,6 +168,7 @@ class PropositionLieu {
       imageUrl: imageUrl,
       categorie: categorie,
       isPermanent: isPermanent,
+      dateFinPrestation: dateFinPrestation,
       statut: statut,
       idLieu: idLieu,
       idUtilisateur: idUtilisateur,
