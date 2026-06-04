@@ -8,6 +8,8 @@ class Avis {
   final DateTime date;
   final String idLieu;
   final String idUtilisateur;
+  final bool isValidated;
+  final String moderationStatus;
 
   /// Creates a place review.
   const Avis({
@@ -17,6 +19,8 @@ class Avis {
     required this.date,
     required this.idLieu,
     required this.idUtilisateur,
+    this.isValidated = false,
+    this.moderationStatus = 'pending',
   });
 
   /// Creates a new review with the current date.
@@ -32,6 +36,8 @@ class Avis {
       date: DateTime.now(),
       idLieu: idLieu,
       idUtilisateur: idUtilisateur,
+      isValidated: false,
+      moderationStatus: 'pending',
     );
   }
 
@@ -50,6 +56,12 @@ class Avis {
       idUtilisateur: SupabaseDataConverter.toStringValue(
         map['id_utilisateur'] ?? map['idUtilisateur'],
       ),
+      isValidated: SupabaseDataConverter.toBool(
+        map['is_validated'] ?? map['isValidated'],
+      ),
+      moderationStatus: SupabaseDataConverter.toStringValue(
+        map['moderation_status'] ?? map['moderationStatus'] ?? 'pending',
+      ),
     );
   }
 
@@ -65,6 +77,8 @@ class Avis {
       'created_at': date.toIso8601String(),
       'id_lieu': idLieu,
       'id_utilisateur': idUtilisateur,
+      'is_validated': isValidated,
+      'moderation_status': moderationStatus,
     };
   }
 }

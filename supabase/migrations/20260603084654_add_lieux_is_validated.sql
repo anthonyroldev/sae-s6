@@ -1,5 +1,8 @@
 drop policy if exists "lieux_read_all" on public.lieux;
 drop policy if exists lieux_select_validated_or_staff on public.lieux;
+alter table public.lieux
+add column if not exists is_validated boolean default false;
+
 create policy lieux_select_validated_or_staff
 on public.lieux for select
 to anon, authenticated

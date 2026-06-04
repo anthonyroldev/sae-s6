@@ -1,6 +1,6 @@
 # Le Repère
 
-Flutter app for discovering student places in Valenciennes.
+Flutter app for discovering student places in Valenciennes. Reviews are validated by an AI.
 
 ## Prerequisites
 
