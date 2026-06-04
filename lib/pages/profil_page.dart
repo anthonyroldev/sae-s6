@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
+import '../data/models/avis_with_lieu.dart';
 import '../data/models/lieu.dart';
 import '../data/models/user_role.dart';
 import '../data/models/utilisateur.dart';
+import '../data/sources/avis_supabase_source.dart';
 import '../data/sources/auth_source.dart';
 import '../data/sources/auth_supabase_source.dart';
 import '../data/sources/favoris_source.dart';
@@ -32,6 +34,9 @@ class ProfilPage extends StatelessWidget {
   /// Role backend, used to reveal moderation tools.
   final RoleSource roleSource;
 
+  /// Reviews backend injected for testing.
+  final AvisSupabaseSource avisSource;
+
   /// Creates the profile page.
   ProfilPage({
     super.key,
@@ -39,10 +44,12 @@ class ProfilPage extends StatelessWidget {
     UtilisateurSource? utilisateurSource,
     RoleSource? roleSource,
     FavorisSource? favorisSource,
+    AvisSupabaseSource? avisSource,
   }) : authSource = authSource ?? AuthSupabaseSource(),
        utilisateurSource = utilisateurSource ?? UtilisateurSupabaseSource(),
        favorisSource = favorisSource ?? FavorisSupabaseSource(),
-       roleSource = roleSource ?? RoleSupabaseSource();
+       roleSource = roleSource ?? RoleSupabaseSource(),
+       avisSource = avisSource ?? AvisSupabaseSource();
 
   @override
   Widget build(BuildContext context) {
@@ -103,6 +110,8 @@ class ProfilPage extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xl),
           _FavoritePlacesList(favorisSource: favorisSource),
+          const SizedBox(height: AppSpacing.xl),
+          _UserAvisList(avisSource: avisSource),
         ],
       ),
     );
@@ -425,6 +434,205 @@ class _FavoritePlaceCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _UserAvisList extends StatefulWidget {
+  final AvisSupabaseSource avisSource;
+
+  const _UserAvisList({required this.avisSource});
+
+  @override
+  State<_UserAvisList> createState() => _UserAvisListState();
+}
+
+class _UserAvisListState extends State<_UserAvisList> {
+  late final Future<List<AvisWithLieu>> _avisFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _avisFuture = widget.avisSource.fetchForCurrentUser();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<AvisWithLieu>>(
+      future: _avisFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final avis = snapshot.data ?? [];
+        final countLabel = avis.length <= 1 ? '${avis.length} avis' : '${avis.length} avis';
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Mes avis',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.selected,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
+                    ),
+                    child: Text(
+                      countLabel,
+                      style: const TextStyle(
+                        color: AppColors.accent,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        height: 1.2,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            const Text(
+              'Vos contributions publiées sur Le Repère.',
+              style: TextStyle(
+                color: AppColors.secondaryText,
+                fontSize: 14,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            if (avis.isEmpty)
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.borderSubtle),
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.all(AppSpacing.lg),
+                  child: Row(
+                    children: [
+                      Icon(Icons.rate_review_outlined, color: AppColors.secondaryText),
+                      SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          'Aucun avis publié pour le moment.',
+                          style: TextStyle(
+                            color: AppColors.secondaryText,
+                            fontSize: 16,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Column(
+                children: [
+                  for (var i = 0; i < avis.length; i++) ...[
+                    _UserAvisCard(item: avis[i]),
+                    if (i < avis.length - 1)
+                      const SizedBox(height: AppSpacing.sm),
+                  ],
+                ],
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _UserAvisCard extends StatelessWidget {
+  final AvisWithLieu item;
+
+  const _UserAvisCard({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    item.nomLieu,
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  _formatDate(item.avis.date),
+                  style: const TextStyle(
+                    color: AppColors.secondaryText,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Row(
+              children: List.generate(
+                5,
+                (i) => Icon(
+                  i < item.avis.note ? Icons.star : Icons.star_border,
+                  color: Colors.amber,
+                  size: 16,
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              item.avis.commentaire,
+              style: const TextStyle(
+                color: Color(0xFF45464D),
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}/'
+        '${date.month.toString().padLeft(2, '0')}/'
+        '${date.year}';
   }
 }
 

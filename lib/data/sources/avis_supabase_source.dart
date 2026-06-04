@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/avis.dart';
 import '../models/avis_with_auteur.dart';
+import '../models/avis_with_lieu.dart';
 
 /// Supabase source for place reviews.
 class AvisSupabaseSource {
@@ -67,6 +68,35 @@ class AvisSupabaseSource {
     if (rows.isEmpty) return (average: 0.0, count: 0);
     final sum = rows.fold<int>(0, (s, r) => s + ((r['note'] as num?)?.toInt() ?? 0));
     return (average: sum / rows.length, count: rows.length);
+  }
+
+  /// Fetches all reviews posted by the current user, with the place name.
+  Future<List<AvisWithLieu>> fetchForCurrentUser() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return [];
+
+    final rows = await _client
+        .from(_table)
+        .select()
+        .eq('id_utilisateur', userId)
+        .order('created_at', ascending: false);
+    if (rows.isEmpty) return [];
+
+    final avisList = rows.map(Avis.fromMap).toList();
+    final lieuIds = avisList.map((a) => a.idLieu).toSet().toList();
+
+    final lieuRows = await _client
+        .from('lieux')
+        .select('id, nom')
+        .inFilter('id', lieuIds);
+    final nomById = {
+      for (final r in lieuRows)
+        r['id'] as String: (r['nom'] as String?) ?? 'Lieu inconnu',
+    };
+
+    return avisList
+        .map((a) => AvisWithLieu(avis: a, nomLieu: nomById[a.idLieu] ?? 'Lieu inconnu'))
+        .toList();
   }
 
   /// Adds or updates one review for a place.
