@@ -13,6 +13,12 @@ class PlaceCard extends StatelessWidget {
   /// Whether the place is marked as favorite by the current user.
   final bool isFavorite;
 
+  /// Mean rating from accepted reviews.
+  final double ratingAverage;
+
+  /// Number of accepted reviews.
+  final int ratingCount;
+
   /// Called when the favorite button is pressed.
   final VoidCallback? onFavoritePressed;
 
@@ -24,6 +30,8 @@ class PlaceCard extends StatelessWidget {
     super.key,
     required this.place,
     this.isFavorite = false,
+    this.ratingAverage = 0,
+    this.ratingCount = 0,
     this.onFavoritePressed,
     this.onTap,
   });
@@ -99,21 +107,44 @@ class PlaceCard extends StatelessWidget {
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
+                          Icon(
+                            ratingCount == 0 ? Icons.star_border : Icons.star,
+                            color: ratingCount == 0
+                                ? AppColors.secondaryText
+                                : AppColors.accent,
+                            size: 16,
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          Text(
+                            ratingCount == 0
+                                ? 'Aucun avis'
+                                : '${ratingAverage.toStringAsFixed(1)} ($ratingCount)',
+                            style: const TextStyle(
+                              color: AppColors.secondaryText,
+                              fontSize: 14,
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
                           const Icon(
                             Icons.schedule,
                             color: AppColors.secondaryText,
                             size: 16,
                           ),
                           const SizedBox(width: AppSpacing.xs),
-                          Text(
-                            place.heures.isEmpty
-                                ? 'Horaires non renseignés'
-                                : place.heures,
-                            style: const TextStyle(
-                              color: AppColors.secondaryText,
-                              fontSize: 14,
-                              height: 1.4,
+                          Expanded(
+                            child: Text(
+                              place.heures.isEmpty
+                                  ? 'Horaires non renseignés'
+                                  : place.heures,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppColors.secondaryText,
+                                fontSize: 14,
+                                height: 1.4,
+                              ),
                             ),
                           ),
                         ],

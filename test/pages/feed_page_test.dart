@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:le_repere/data/models/lieu.dart';
 import 'package:le_repere/pages/feed_page.dart';
 
+import '../support/fake_avis_source.dart';
 import '../support/fake_favoris_source.dart';
 import '../support/fake_lieu_source.dart';
 
@@ -10,6 +11,7 @@ void main() {
   Widget buildFeed({
     required List<Lieu> places,
     FakeFavorisSource? favorisSource,
+    FakeAvisSource? avisSource,
   }) {
     return MaterialApp(
       home: FeedPage(
@@ -17,6 +19,7 @@ void main() {
         favorisSource:
             favorisSource ??
             FakeFavorisSource(idsStream: Stream.value(const <String>{})),
+        avisSource: avisSource ?? FakeAvisSource(),
       ),
     );
   }
@@ -37,6 +40,21 @@ void main() {
     await tester.pump();
 
     expect(find.text('Aucun lieu trouve'), findsOneWidget);
+  });
+
+  testWidgets('renders mean rating on each place card', (tester) async {
+    await tester.pumpWidget(
+      buildFeed(
+        places: const [Lieu(id: 'bu', nom: 'BU', description: 'Calme')],
+        avisSource: FakeAvisSource(
+          statsByLieu: const {'bu': (average: 4.5, count: 2)},
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('4.5 (2)'), findsOneWidget);
   });
 
   testWidgets('toggling a favorite forwards the change to the source', (

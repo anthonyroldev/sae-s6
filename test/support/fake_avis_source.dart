@@ -7,7 +7,10 @@ import 'package:le_repere/data/sources/avis_source.dart';
 class FakeAvisSource implements AvisSource {
   final Completer<void> moderationCompleter = Completer<void>();
   final List<Avis> saved = [];
+  final Map<String, ({double average, int count})> statsByLieu;
   Avis? moderatedAvis;
+
+  FakeAvisSource({this.statsByLieu = const {}});
 
   @override
   String? currentUserId = 'user-1';
@@ -21,7 +24,17 @@ class FakeAvisSource implements AvisSource {
 
   @override
   Future<({double average, int count})> fetchStats(String idLieu) {
-    return Future.value((average: 0.0, count: 0));
+    return Future.value(statsByLieu[idLieu] ?? (average: 0.0, count: 0));
+  }
+
+  @override
+  Future<Map<String, ({double average, int count})>> fetchStatsForLieux(
+    List<String> idsLieu,
+  ) {
+    return Future.value({
+      for (final idLieu in idsLieu)
+        if (statsByLieu[idLieu] != null) idLieu: statsByLieu[idLieu]!,
+    });
   }
 
   @override

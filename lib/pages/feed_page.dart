@@ -4,6 +4,8 @@ import '../core/constants/app_colors.dart';
 import '../core/constants/app_spacing.dart';
 import '../core/utils/logger.dart';
 import '../data/models/lieu.dart';
+import '../data/sources/avis_source.dart';
+import '../data/sources/avis_supabase_source.dart';
 import '../data/sources/favoris_source.dart';
 import '../data/sources/favoris_supabase_source.dart';
 import '../data/sources/lieu_supabase_source.dart';
@@ -22,8 +24,16 @@ class FeedPage extends StatefulWidget {
   /// Source of favorite places. Injected in tests.
   final FavorisSource? favorisSource;
 
+  /// Source of review stats. Injected in tests.
+  final AvisSource? avisSource;
+
   /// Creates the home feed page.
-  const FeedPage({super.key, this.lieuSource, this.favorisSource});
+  const FeedPage({
+    super.key,
+    this.lieuSource,
+    this.favorisSource,
+    this.avisSource,
+  });
 
   @override
   State<FeedPage> createState() => _FeedPageState();
@@ -34,6 +44,7 @@ class _FeedPageState extends State<FeedPage> {
       widget.lieuSource ?? LieuSupabaseSource();
   late final FavorisSource _favorisSource =
       widget.favorisSource ?? FavorisSupabaseSource();
+  late final AvisSource _avisSource = widget.avisSource ?? AvisSupabaseSource();
   final _searchController = TextEditingController();
   final _searchQuery = ValueNotifier<String>('');
   final _selectedCategory = ValueNotifier<LieuCategorie>(LieuCategorie.all);
@@ -128,72 +139,85 @@ class _FeedPageState extends State<FeedPage> {
 
     final places = snapshot.data ?? const <Lieu>[];
     return [
-      StreamBuilder<Set<String>>(
-        stream: favorisSource.watchCurrentUserPlaceIds(),
-        initialData: const <String>{},
-        builder: (context, favoritesSnapshot) {
-          final favoriteIds = favoritesSnapshot.data ?? const <String>{};
+      FutureBuilder<Map<String, ({double average, int count})>>(
+        future: _avisSource.fetchStatsForLieux(
+          places.map((place) => place.id).toList(growable: false),
+        ),
+        initialData: const {},
+        builder: (context, statsSnapshot) {
+          final statsByLieu = statsSnapshot.data ?? const {};
 
-          return ValueListenableBuilder<String>(
-            valueListenable: _searchQuery,
-            builder: (context, query, _) {
-              final filteredPlaces = places
-                  .where(
-                    (place) =>
-                        _matchesSearch(place, query) &&
-                        _matchesFilter(place, _selectedCategory.value),
-                  )
-                  .toList(growable: false);
+          return StreamBuilder<Set<String>>(
+            stream: favorisSource.watchCurrentUserPlaceIds(),
+            initialData: const <String>{},
+            builder: (context, favoritesSnapshot) {
+              final favoriteIds = favoritesSnapshot.data ?? const <String>{};
 
-              if (filteredPlaces.isEmpty) {
-                return const SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
-                    child: Text(
-                      'Aucun lieu trouve',
-                      style: TextStyle(
-                        color: AppColors.secondaryText,
-                        fontSize: 16,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                );
-              }
+              return ValueListenableBuilder<String>(
+                valueListenable: _searchQuery,
+                builder: (context, query, _) {
+                  final filteredPlaces = places
+                      .where(
+                        (place) =>
+                            _matchesSearch(place, query) &&
+                            _matchesFilter(place, _selectedCategory.value),
+                      )
+                      .toList(growable: false);
 
-              return SliverPadding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.md,
-                  AppSpacing.md,
-                  AppSpacing.lg,
-                ),
-                sliver: SliverList.separated(
-                  itemCount: filteredPlaces.length,
-                  separatorBuilder: (_, _) =>
-                      const SizedBox(height: AppSpacing.md),
-                  itemBuilder: (context, index) {
-                    final place = filteredPlaces[index];
-                    final isFavorite = favoriteIds.contains(place.id);
-
-                    return PlaceCard(
-                      place: place,
-                      isFavorite: isFavorite,
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => LieuDetailPage(lieu: place),
+                  if (filteredPlaces.isEmpty) {
+                    return const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Text(
+                          'Aucun lieu trouve',
+                          style: TextStyle(
+                            color: AppColors.secondaryText,
+                            fontSize: 16,
+                            height: 1.4,
+                          ),
                         ),
                       ),
-                      onFavoritePressed: () {
-                        _setFavorite(
-                          favorisSource: favorisSource,
+                    );
+                  }
+
+                  return SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.md,
+                      AppSpacing.md,
+                      AppSpacing.md,
+                      AppSpacing.lg,
+                    ),
+                    sliver: SliverList.separated(
+                      itemCount: filteredPlaces.length,
+                      separatorBuilder: (_, _) =>
+                          const SizedBox(height: AppSpacing.md),
+                      itemBuilder: (context, index) {
+                        final place = filteredPlaces[index];
+                        final isFavorite = favoriteIds.contains(place.id);
+                        final stats = statsByLieu[place.id];
+
+                        return PlaceCard(
                           place: place,
-                          isFavorite: !isFavorite,
+                          isFavorite: isFavorite,
+                          ratingAverage: stats?.average ?? 0,
+                          ratingCount: stats?.count ?? 0,
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => LieuDetailPage(lieu: place),
+                            ),
+                          ),
+                          onFavoritePressed: () {
+                            _setFavorite(
+                              favorisSource: favorisSource,
+                              place: place,
+                              isFavorite: !isFavorite,
+                            );
+                          },
                         );
                       },
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
               );
             },
           );

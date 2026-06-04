@@ -78,6 +78,39 @@ class AvisSupabaseSource implements AvisSource {
     return (average: sum / rows.length, count: rows.length);
   }
 
+  /// Returns the average note and total review count for each place.
+  @override
+  Future<Map<String, ({double average, int count})>> fetchStatsForLieux(
+    List<String> idsLieu,
+  ) async {
+    final uniqueIds = idsLieu.where((id) => id.trim().isNotEmpty).toSet();
+    if (uniqueIds.isEmpty) return const {};
+
+    final rows = await _client
+        .from(_table)
+        .select('id_lieu, note')
+        .inFilter('id_lieu', uniqueIds.toList())
+        .eq('is_validated', true);
+
+    final sums = <String, double>{};
+    final counts = <String, int>{};
+    for (final row in rows) {
+      final idLieu = SupabaseDataConverter.toStringValue(row['id_lieu']);
+      if (idLieu.isEmpty) continue;
+      sums[idLieu] =
+          (sums[idLieu] ?? 0) + SupabaseDataConverter.toDouble(row['note']);
+      counts[idLieu] = (counts[idLieu] ?? 0) + 1;
+    }
+
+    return {
+      for (final idLieu in sums.keys)
+        idLieu: (
+          average: sums[idLieu]! / counts[idLieu]!,
+          count: counts[idLieu]!,
+        ),
+    };
+  }
+
   @override
   Future<void> moderateReview(Avis avis) async {
     if (avis.idAvis == 0) {

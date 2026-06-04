@@ -12,6 +12,11 @@ abstract interface class AvisSource {
   /// Returns public accepted review stats for a place.
   Future<({double average, int count})> fetchStats(String idLieu);
 
+  /// Returns public accepted review stats indexed by place id.
+  Future<Map<String, ({double average, int count})>> fetchStatsForLieux(
+    List<String> idsLieu,
+  );
+
   /// Adds or updates one review.
   Future<Avis> save(Avis avis);
 
