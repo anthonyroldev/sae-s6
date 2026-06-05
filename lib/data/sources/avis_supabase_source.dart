@@ -112,14 +112,19 @@ class AvisSupabaseSource implements AvisSource {
   }
 
   @override
-  Future<void> moderateReview(Avis avis) async {
+  Future<String> moderateReview(Avis avis) async {
     if (avis.idAvis == 0) {
       throw ArgumentError.value(avis.idAvis, 'idAvis');
     }
-    await _client.functions.invoke(
+    final response = await _client.functions.invoke(
       'validate-review',
       body: {'avisId': avis.idAvis},
     );
+    final data = response.data;
+    if (data is! Map<String, dynamic>) {
+      throw StateError('Invalid moderation response');
+    }
+    return SupabaseDataConverter.toStringValue(data['status']);
   }
 
   /// Adds or updates one review for a place.

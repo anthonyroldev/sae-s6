@@ -5,7 +5,7 @@ import 'package:le_repere/data/models/avis_with_auteur.dart';
 import 'package:le_repere/data/sources/avis_source.dart';
 
 class FakeAvisSource implements AvisSource {
-  final Completer<void> moderationCompleter = Completer<void>();
+  final Completer<String> moderationCompleter = Completer<String>();
   final List<Avis> saved = [];
   final Map<String, ({double average, int count})> statsByLieu;
   Avis? moderatedAvis;
@@ -53,7 +53,7 @@ class FakeAvisSource implements AvisSource {
   }
 
   @override
-  Future<void> moderateReview(Avis avis) {
+  Future<String> moderateReview(Avis avis) {
     moderatedAvis = avis;
     return moderationCompleter.future;
   }

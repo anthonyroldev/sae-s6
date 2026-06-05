@@ -20,6 +20,6 @@ abstract interface class AvisSource {
   /// Adds or updates one review.
   Future<Avis> save(Avis avis);
 
-  /// Starts server-side moderation for one review.
-  Future<void> moderateReview(Avis avis);
+  /// Starts server-side moderation for one review and returns its final status.
+  Future<String> moderateReview(Avis avis);
 }
